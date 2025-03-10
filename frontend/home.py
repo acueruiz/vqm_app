@@ -55,7 +55,7 @@ st.markdown('<div class="header">📋 Análisis de VQM MDM</div>', unsafe_allow_
 
 # cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):
-    time.sleep(1)  # Simulación de carga
+    time.sleep(1)  # simulación de carga
     
     # datos de VQM MDM
     response_vqm = requests.get(f"{API_URL}/vqm_mdm")
