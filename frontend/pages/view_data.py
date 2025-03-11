@@ -182,13 +182,25 @@ if not df_mdm.empty:
         if val is False:  # Resaltar valores no conformes
             return 'background-color: #FF4B4B; color: white; font-weight: bold;'
         return ''
+    
+    # Definir alias para las columnas
+    column_aliases = {
+        "titulo": "MDM",
+        "fecha": "Fecha",
+        "operador": "Operador",
+        "vqm_bascula_conforme": "Bascula Conforme",
+        "vqm_masico_conforme": "Másico Conforme"
+    }
 
-    # Mostrar la tabla en Streamlit con formato
+    # Renombrar las columnas en el DataFrame
+    df_mdm = df_mdm.rename(columns=column_aliases)
+
+    # Mostrar la tabla en Streamlit con formato y alias en los encabezados
     st.dataframe(
-    df_mdm.style.applymap(highlight_non_conform, 
-                          subset=["vqm_bascula_conforme", "vqm_masico_conforme"]),
-    use_container_width=True
-)
+        df_mdm.style.applymap(highlight_non_conform, 
+                            subset=["Bascula Conforme", "Másico Conforme"]),
+        use_container_width=True
+    )
 
 else:
     st.warning("No se encontraron datos para los filtros seleccionados.")
