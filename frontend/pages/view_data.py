@@ -62,7 +62,7 @@ st.markdown(
         [data-testid="stImage"] img {
             margin-top: -30px !important; /* Reduce el espacio superior del logo */
             margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
-        }
+        } 
     
         /* Encabezados mejorados */
         .header {
