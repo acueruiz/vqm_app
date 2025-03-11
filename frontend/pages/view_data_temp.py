@@ -6,10 +6,10 @@ import pandas as pd
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="VQM MDM - Datos", layout="wide")
+st.set_page_config(page_title="VQM Temperatura MI10 - Datos", layout="wide")
 
-# encabezado
-st.markdown('<div class="header">VQM MDM - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
+# Encabezado
+st.markdown('<div class="header">VQM Temperatura MI10 - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
 
 # ---------------- Sidebar con categorías agrupadas ---------------- #
 st.sidebar.title("Menú Principal")
@@ -103,65 +103,60 @@ st.markdown(
 
 # Cargar datos de la API Flask
 @st.cache_data
-def get_mdm_data():
-    response = requests.get(f"{API_URL}/vqm_mdm")
+def get_temp_mi10_data():
+    response = requests.get(f"{API_URL}/vqm_temperatura_mi10")
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
 
-        # Verificar que la columna 'fecha' existe y convertirla a datetime
+        # Convertir fecha a datetime
         if "fecha" in df.columns:
             df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
 
         return df
     else:
-        st.error("❌ Error al obtener detalles de MDMs.")
+        st.error("❌ Error al obtener datos de VQM Temperatura MI10.")
         return pd.DataFrame()
 
-df_mdm = get_mdm_data()
+df_temp_mi10 = get_temp_mi10_data()
 
-# Verifica que el DataFrame no esté vacío antes de continuar
-if df_mdm.empty:
+# Verificar que el DataFrame no esté vacío antes de continuar
+if df_temp_mi10.empty:
     st.warning("No hay datos disponibles.")
     st.stop()
 
 # Filtros de búsqueda
-col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
-    mdm_selected = st.selectbox("MDM", ["Todos"] + list(df_mdm["titulo"].unique()))
+    maquina_selected = st.selectbox("Máquina", ["Todas"] + list(df_temp_mi10["titulo"].unique()))
 
 with col2:
-    fecha_inicio = st.date_input("Desde fecha:")
+    trimestre_selected = st.selectbox("Trimestre", ["Todos"] + list(df_temp_mi10["trimestre_anio"].unique()))
 
 with col3:
-    fecha_fin = st.date_input("Hasta fecha:")
-
-with col4:
-    if st.button("🔍 Buscar"):
+    if st.button("🔍 Filtrar"):
         st.session_state.filtrar = True
 
 # Filtrar datos según selección
 if "filtrar" in st.session_state and st.session_state.filtrar:
-    if mdm_selected != "Todos":
-        df_mdm = df_mdm[df_mdm["titulo"] == mdm_selected]
+    if maquina_selected != "Todas":
+        df_temp_mi10 = df_temp_mi10[df_temp_mi10["titulo"] == maquina_selected]
 
-    if "fecha" in df_mdm.columns:
-        df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
-                        (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
+    if trimestre_selected != "Todos":
+        df_temp_mi10 = df_temp_mi10[df_temp_mi10["trimestre_anio"] == trimestre_selected]
 
 # Mostrar tabla con funcionalidades adicionales
-if not df_mdm.empty:
-    df_mdm = df_mdm.sort_values(by="fecha", ascending=False)
-    df_mdm = df_mdm.reset_index(drop=True)
+if not df_temp_mi10.empty:
+    df_temp_mi10 = df_temp_mi10.sort_values(by="fecha", ascending=False)
+    df_temp_mi10 = df_temp_mi10.reset_index(drop=True)
     
     def highlight_non_conform(val):
-        if val is False:  # Corrigiendo el formato de "NO CONFORME" en booleanos
+        if val is False:  # Resalta los NO CONFORMES en rojo
             return 'background-color: #FF4B4B; color: white; font-weight: bold;'
         return ''
 
-    # Mostrar en Streamlit con los valores correctos
-    st.dataframe(df_mdm.style.applymap(highlight_non_conform, 
-                subset=["vqm_bascula_conforme", "vqm_masico_conforme"]))
+    # Mostrar en Streamlit con resaltado de NO CONFORMIDADES
+    st.dataframe(df_temp_mi10.style.applymap(highlight_non_conform, subset=["vqm_conforme"]))
 
 else:
     st.warning("No se encontraron datos para los filtros seleccionados.")
@@ -171,10 +166,10 @@ col1, col2 = st.columns([1, 1])
 
 with col1:
     if st.button("📥 Exportar a CSV"):
-        df_mdm.to_csv("datos_vqm.csv", index=False)
+        df_temp_mi10.to_csv("datos_vqm_temperatura_mi10.csv", index=False)
         st.success("Archivo CSV generado correctamente.")
 
 with col2:
     if st.button("📥 Exportar a Excel"):
-        df_mdm.to_excel("datos_vqm.xlsx", index=False)
+        df_temp_mi10.to_excel("datos_vqm_temperatura_mi10.xlsx", index=False)
         st.success("Archivo Excel generado correctamente.")

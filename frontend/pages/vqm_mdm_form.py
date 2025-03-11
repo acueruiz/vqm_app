@@ -11,19 +11,52 @@ st.set_page_config(page_title="VQM MDM - Introducción de Datos", layout="wide")
 # encabezado
 st.markdown('<div class="header">VQM MDM - INTRODUCCIÓN DE DATOS</div>', unsafe_allow_html=True)
 
+# ---------------- Sidebar con categorías agrupadas ---------------- #
+st.sidebar.title("Menú Principal")
+
+# Inicio
+st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
+
+# formularios
+with st.sidebar.expander("📝 Formularios", expanded=False):
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
+
+# visualización de Datos
+with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
+    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI10", icon="🌡️")
+
+# administración
+with st.sidebar.expander("⚙️ Administración", expanded=False):
+    st.page_link("pages/users.py", label="Usuarios", icon="👥")
+
+# dashboard
+st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
+
 # estilos CSS personalizados
-st.markdown("""
+st.markdown(
+    """
     <style>
+
+        /* Oculta el menú de navegación automático de Streamlit */
+        [data-testid="stSidebarNav"] {
+            display: none !important;
+        }
+    
+        /* Encabezados mejorados */
         .header {
             text-align: center;
             background-color: #0055A4;
             padding: 15px;
             color: white;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        /* Botones personalizados */
         .stButton > button {
             background-color: #0055A4;
             color: white;
@@ -33,16 +66,40 @@ st.markdown("""
             border: none;
             transition: 0.3s;
         }
+
         .stButton > button:hover {
             background-color: #003C7E;
             transform: scale(1.05);
         }
+
+        /* Separadores visuales */
         .separator {
             border-bottom: 3px solid #0055A4;
-            margin: 20px 0;
+            margin: 30px 0;
+        }
+
+        /* Mejora en la tabla de datos */
+        .dataframe {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+
+        .dataframe th, .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .dataframe th {
+            background-color: #0055A4;
+            color: white;
+            text-align: left;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 # convertir valores ingresados a float
 def convertir_a_float(valor):

@@ -11,10 +11,40 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
+# ---------------- Sidebar con categorías agrupadas ---------------- #
+st.sidebar.title("Menú Principal")
+
+# Inicio
+st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
+
+# formularios
+with st.sidebar.expander("📝 Formularios", expanded=False):
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
+
+# visualización de Datos
+with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
+    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI10", icon="🌡️")
+
+# administración
+with st.sidebar.expander("⚙️ Administración", expanded=False):
+    st.page_link("pages/users.py", label="Usuarios", icon="👥")
+
+# dashboard
+st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
+
 # estilos CSS personalizados
 st.markdown(
     """
     <style>
+
+        /* Oculta el menú de navegación automático de Streamlit */
+        [data-testid="stSidebarNav"] {
+            display: none !important;
+        }
+    
+        /* Encabezados mejorados */
         .header {
             text-align: center;
             background-color: #0055A4;
@@ -25,7 +55,8 @@ st.markdown(
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        
+
+        /* Botones personalizados */
         .stButton > button {
             background-color: #0055A4;
             color: white;
@@ -40,10 +71,30 @@ st.markdown(
             background-color: #003C7E;
             transform: scale(1.05);
         }
-        
+
+        /* Separadores visuales */
         .separator {
             border-bottom: 3px solid #0055A4;
-            margin: 20px 0;
+            margin: 30px 0;
+        }
+
+        /* Mejora en la tabla de datos */
+        .dataframe {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+
+        .dataframe th, .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .dataframe th {
+            background-color: #0055A4;
+            color: white;
+            text-align: left;
         }
     </style>
     """,
