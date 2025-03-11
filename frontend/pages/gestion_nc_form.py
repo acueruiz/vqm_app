@@ -1,16 +1,16 @@
 import streamlit as st
 import requests
-import pandas as pd
+import datetime
 import os
 
 # Configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="VQM MDM - Datos", layout="wide")
+st.set_page_config(page_title="Gestión de No Conformidades", layout="wide")
 
-# encabezado
-st.markdown('<div class="header">VQM MDM - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
+# Encabezado
+st.markdown('<div class="header">TRATAMIENTO DE LAS NC DE LAS VQM</div>', unsafe_allow_html=True)
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -121,80 +121,68 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Cargar datos de la API Flask
-@st.cache_data
-def get_mdm_data():
-    response = requests.get(f"{API_URL}/vqm_mdm")
-    if response.status_code == 200:
-        df = pd.DataFrame(response.json())
+# ---------------- Formulario de No Conformidades ---------------- #
 
-        # Verificar que la columna 'fecha' existe y convertirla a datetime
-        if "fecha" in df.columns:
-            df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
-
-        return df
-    else:
-        st.error("❌ Error al obtener detalles de MDMs.")
-        return pd.DataFrame()
-
-df_mdm = get_mdm_data()
-
-# Verifica que el DataFrame no esté vacío antes de continuar
-if df_mdm.empty:
-    st.warning("No hay datos disponibles.")
-    st.stop()
-
-# Filtros de búsqueda
-col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-
+col1, col2, col3 = st.columns(3)
 with col1:
-    mdm_selected = st.selectbox("MDM", ["Todos"] + list(df_mdm["titulo"].unique()))
+    titulo = st.text_input("Título")
+    maquina = st.text_input("Máquina")
+    descripcion = st.text_area("Descripción de la intervención")
+    efectos_producto = st.text_input("Posibles efectos sobre PRODUCTO")
+    efectos_proceso = st.text_input("Posibles efectos sobre PROCESO")
 
 with col2:
-    fecha_inicio = st.date_input("Desde fecha:")
+    fecha = st.date_input("Fecha", value=datetime.date.today())
+    operador = st.text_input("Operario")
+    causa = st.text_input("Causa")
+    acciones_producto = st.text_input("Si producto NC, acciones")
+    nc_validada = st.selectbox("NC validada", ["Pendiente", "Sí", "No"])
 
 with col3:
-    fecha_fin = st.date_input("Hasta fecha:")
+    instrumento = st.text_input("Instrumento de medida")
+    resultado = st.text_input("Resultado tras intervención")
+    fecha_acciones = st.date_input("Fecha acciones producto", value=datetime.date.today())
+    traza = st.text_input("Traza disponible", "NO HAY TRAZA GUARDADA", disabled=True)
 
-with col4:
-    if st.button("🔍 Buscar"):
-        st.session_state.filtrar = True
+st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-# Filtrar datos según selección
-if "filtrar" in st.session_state and st.session_state.filtrar:
-    if mdm_selected != "Todos":
-        df_mdm = df_mdm[df_mdm["titulo"] == mdm_selected]
-
-    if "fecha" in df_mdm.columns:
-        df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
-                        (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
-
-# Mostrar tabla con funcionalidades adicionales
-if not df_mdm.empty:
-    df_mdm = df_mdm.sort_values(by="fecha", ascending=False)
-    df_mdm = df_mdm.reset_index(drop=True)
-    
-    def highlight_non_conform(val):
-        if val is False:  # Corrigiendo el formato de "NO CONFORME" en booleanos
-            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
-        return ''
-
-    # Mostrar en Streamlit con los valores correctos
-    st.dataframe(df_mdm.style.applymap(highlight_non_conform, 
-                subset=["vqm_bascula_conforme", "vqm_masico_conforme"]))
-
-else:
-    st.warning("No se encontraron datos para los filtros seleccionados.")
-
-# Botones adicionales
-col1, col2 = st.columns([1, 1])
-
+# ---------------- Botones de acción ---------------- #
+col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("📥 Exportar a CSV"):
-        df_mdm.to_csv("datos_vqm.csv", index=False)
-        st.success("Archivo CSV generado correctamente.")
+    if st.button("🧹 Limpiar formulario"):
+        st.experimental_rerun()
 
 with col2:
-    if st.button("📥 Exportar a Excel"):
-        df_mdm.to_excel("datos_vqm.xlsx", index=False)
-        st.success("Archivo Excel generado correctamente.")
+    if st.button("📧 Gestión de correos"):
+        st.warning("Funcionalidad pendiente de integración.")
+
+with col3:
+    if st.button("📥 Guardar"):
+        if not titulo or not fecha or not causa or not resultado:
+            st.error("❌ Faltan campos obligatorios: Título, Fecha, Causa, Resultado tras intervención.")
+        else:
+            nuevo_registro = {
+                "titulo": titulo,
+                "fecha": str(fecha),
+                "instrumento": instrumento,
+                "maquina": maquina,
+                "operador": operador,
+                "causa": causa,
+                "descripcion": descripcion,
+                "resultado": resultado,
+                "efectos_producto": efectos_producto,
+                "efectos_proceso": efectos_proceso,
+                "acciones_producto": acciones_producto,
+                "fecha_acciones": str(fecha_acciones),
+                "nc_validada": nc_validada,
+                "traza": traza
+            }
+
+            try:
+                response = requests.post(f"{API_URL}/nc_vqm", json=nuevo_registro)
+                if response.status_code == 201:
+                    st.success("✅ No Conformidad guardada correctamente.")
+                else:
+                    st.error(f"❌ Error al guardar la No Conformidad: {response.text}")
+            except requests.exceptions.RequestException as e:
+                st.error(f"❌ Error en la conexión con la API: {str(e)}")

@@ -11,8 +11,17 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # configuración de la página
 st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
+# Obtener ruta absoluta de la imagen
+logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
+
+# Verificar si la imagen existe
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, use_container_width=True)
+else:
+    st.sidebar.warning("⚠️ No se encontró el logo. Verifica la ruta del archivo.")
+
 # ---------------- Sidebar con categorías agrupadas ---------------- #
-st.sidebar.title("Menú Principal")
+st.sidebar.title("MENÚ DE NAVEGACIÓN")
 
 # inicio
 st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
@@ -21,6 +30,7 @@ st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
 with st.sidebar.expander("📝 Formularios", expanded=False):
     st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
     st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
 
 # visualización de Datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
@@ -42,6 +52,15 @@ st.markdown(
         /* Oculta el menú de navegación automático de Streamlit */
         [data-testid="stSidebarNav"] {
             display: none !important;
+        }
+
+        [data-testid="stSidebar"] {
+            padding-top: 0px !important; /* Reduce el padding superior del sidebar */
+        }
+        
+        [data-testid="stImage"] img {
+            margin-top: -30px !important; /* Reduce el espacio superior del logo */
+            margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
         }
     
         /* Encabezados mejorados */

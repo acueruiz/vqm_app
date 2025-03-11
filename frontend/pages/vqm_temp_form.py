@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
+import os
 
 # configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
@@ -12,21 +13,31 @@ st.set_page_config(page_title="VQM Temperatura - Introducción de Datos", layout
 # encabezado
 st.markdown('<div class="header">VQM TEMPERATURA - INTRODUCCIÓN DE DATOS</div>', unsafe_allow_html=True)
 
-# ---------------- Sidebar con categorías agrupadas ---------------- #
-st.sidebar.title("Menú Principal")
+# Obtener ruta absoluta de la imagen
+logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
 
-# Inicio
+# Verificar si la imagen existe
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, use_container_width=True)
+else:
+    st.sidebar.warning("⚠️ No se encontró el logo. Verifica la ruta del archivo.")
+
+# ---------------- Sidebar con categorías agrupadas ---------------- #
+st.sidebar.title("MENÚ DE NAVEGACIÓN")
+
+# inicio
 st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
 
 # formularios
 with st.sidebar.expander("📝 Formularios", expanded=False):
     st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
     st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
 
 # visualización de Datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI10", icon="🌡️")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
@@ -43,6 +54,15 @@ st.markdown(
         /* Oculta el menú de navegación automático de Streamlit */
         [data-testid="stSidebarNav"] {
             display: none !important;
+        }
+
+        [data-testid="stSidebar"] {
+            padding-top: 0px !important; /* Reduce el padding superior del sidebar */
+        }
+        
+        [data-testid="stImage"] img {
+            margin-top: -30px !important; /* Reduce el espacio superior del logo */
+            margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
         }
     
         /* Encabezados mejorados */
