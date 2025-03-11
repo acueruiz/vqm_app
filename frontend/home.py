@@ -5,16 +5,16 @@ import pandas as pd
 import time
 import plotly.express as px
 
-# Configurar API URL
+# configurar API URL
 API_URL = "http://127.0.0.1:5000/vqm"
 
-# Configuración de la página
+# configuración de la página
 st.set_page_config(page_title="Aplicación VQM", layout="wide")
 
 # ---------------- Sidebar con categorías agrupadas ---------------- #
 st.sidebar.title("Menú Principal")
 
-# Inicio
+# inicio
 st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
 
 # formularios
@@ -25,7 +25,7 @@ with st.sidebar.expander("📝 Formularios", expanded=False):
 # visualización de Datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI10", icon="🌡️")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
@@ -102,7 +102,7 @@ st.markdown(
 )
 
 # encabezado principal
-st.markdown('<div class="header">📋 Análisis de VQM MDM</div>', unsafe_allow_html=True)
+st.markdown('<div class="header">📋 Análisis de VQM</div>', unsafe_allow_html=True)
 
 # cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):
