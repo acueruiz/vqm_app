@@ -9,7 +9,7 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="VQM MDM - Datos", layout="wide")
 
-# encabezado
+# Encabezado
 st.markdown('<div class="header">VQM MDM - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
 
 # Obtener ruta absoluta de la imagen
@@ -144,6 +144,9 @@ if df_mdm.empty:
     st.warning("No hay datos disponibles.")
     st.stop()
 
+# Filtrar solo las columnas necesarias y en el orden específico
+df_mdm = df_mdm[["titulo", "fecha", "operador", "vqm_bascula_conforme", "vqm_masico_conforme"]]
+
 # Filtros de búsqueda
 col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
@@ -157,8 +160,10 @@ with col3:
     fecha_fin = st.date_input("Hasta fecha:")
 
 with col4:
-    if st.button("🔍 Buscar"):
-        st.session_state.filtrar = True
+    buscar = st.button("🔍 Buscar", use_container_width=True)
+
+if buscar:
+    st.session_state.filtrar = True
 
 # Filtrar datos según selección
 if "filtrar" in st.session_state and st.session_state.filtrar:
@@ -169,24 +174,26 @@ if "filtrar" in st.session_state and st.session_state.filtrar:
         df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
                         (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
 
-# Mostrar tabla con funcionalidades adicionales
+# Mostrar tabla con estilos personalizados
 if not df_mdm.empty:
-    df_mdm = df_mdm.sort_values(by="fecha", ascending=False)
-    df_mdm = df_mdm.reset_index(drop=True)
-    
+    df_mdm = df_mdm.sort_values(by="fecha", ascending=False).reset_index(drop=True)
+
     def highlight_non_conform(val):
-        if val is False:  # Corrigiendo el formato de "NO CONFORME" en booleanos
+        if val is False:  # Resaltar valores no conformes
             return 'background-color: #FF4B4B; color: white; font-weight: bold;'
         return ''
 
-    # Mostrar en Streamlit con los valores correctos
-    st.dataframe(df_mdm.style.applymap(highlight_non_conform, 
-                subset=["vqm_bascula_conforme", "vqm_masico_conforme"]))
+    # Mostrar la tabla en Streamlit con formato
+    st.dataframe(
+    df_mdm.style.applymap(highlight_non_conform, 
+                          subset=["vqm_bascula_conforme", "vqm_masico_conforme"]),
+    use_container_width=True
+)
 
 else:
     st.warning("No se encontraron datos para los filtros seleccionados.")
 
-# Botones adicionales
+# Botones de exportación
 col1, col2 = st.columns([1, 1])
 
 with col1:
