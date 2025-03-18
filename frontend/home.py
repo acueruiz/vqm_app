@@ -36,6 +36,7 @@ with st.sidebar.expander("📝 Formularios", expanded=False):
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
     st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
@@ -121,7 +122,7 @@ st.markdown(
 )
 
 # encabezado principal
-st.markdown('<div class="header">📋 Análisis de VQM</div>', unsafe_allow_html=True)
+st.markdown('<div class="header">PÁGINA DE INICIO - Análisis de VQM</div>', unsafe_allow_html=True)
 
 # cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):

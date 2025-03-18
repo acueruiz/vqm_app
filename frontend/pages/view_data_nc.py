@@ -1,16 +1,16 @@
 import streamlit as st
 import requests
-import datetime
+import pandas as pd
 import os
 
 # Configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="Gestión de No Conformidades", layout="wide")
+st.set_page_config(page_title="Gestión de NC - Datos", layout="wide")
 
 # Encabezado
-st.markdown('<div class="header">TRATAMIENTO DE LAS NC DE LAS VQM</div>', unsafe_allow_html=True)
+st.markdown('<div class="header">GESTIÓN DE NC - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -122,76 +122,101 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ---------------- Formulario de No Conformidades ---------------- #
+# ---------------- Cargar datos desde la API ---------------- #
+@st.cache_data
+def get_nc_data():
+    response = requests.get(f"{API_URL}/tratamiento_nc_vqm")
+    if response.status_code == 200:
+        df = pd.DataFrame(response.json())
 
-def reset_form():
-    for key in st.session_state.keys():
-        del st.session_state[key]
-    st.rerun()
+        # Convertir la columna 'fecha' a datetime si existe
+        if "fecha" in df.columns:
+            df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
 
-col1, col2, col3 = st.columns(3)
+        return df
+    else:
+        st.error("❌ Error al obtener datos de No Conformidades.")
+        return pd.DataFrame()
+
+df_nc = get_nc_data()
+
+# Verificar si hay datos disponibles
+if df_nc.empty:
+    st.warning("No hay datos disponibles.")
+    st.stop()
+
+# Seleccionar columnas relevantes
+df_nc = df_nc[["titulo", "fecha", "operario", "nc_validada", "vqm_conforme", "descripcion_intervencion", "resultado_intervencion"]]
+
+# ---------------- Filtros de búsqueda ---------------- #
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+
 with col1:
-    titulo = st.text_input("Título")
-    maquina = st.text_input("Máquina")
-    descripcion = st.text_area("Descripción de la intervención")
-    efectos_producto = st.text_input("Posibles efectos sobre PRODUCTO")
-    efectos_proceso = st.text_input("Posibles efectos sobre PROCESO")
+    nc_selected = st.selectbox("Título NC", ["Todos"] + list(df_nc["titulo"].unique()))
 
 with col2:
-    fecha = st.date_input("Fecha", value=datetime.date.today())
-    operador = st.text_input("Operario")
-    causa = st.text_input("Causa")
-    acciones_producto = st.text_input("Si producto NC, acciones")
-    nc_validada = st.selectbox("NC validada", ["Pendiente", "Sí", "No"])
+    fecha_inicio = st.date_input("Desde fecha:")
 
 with col3:
-    instrumento = st.text_input("Instrumento de medida")
-    trimestre = st.selectbox("Trimestre", ["1 Semestre", "2 Semestre", "3 Semestre", " Semestre"])
-    resultado = st.text_input("Resultado tras intervención")
-    fecha_acciones = st.date_input("Fecha acciones producto", value=datetime.date.today())
-    traza = st.text_input("Traza disponible", "NO HAY TRAZA GUARDADA", disabled=True)
-    vqm_conforme = st.selectbox("¿CONFORMIDAD?", ["Sí", "No"])
+    fecha_fin = st.date_input("Hasta fecha:")
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+with col4:
+    buscar = st.button("🔍 Buscar", use_container_width=True)
 
-# ---------------- Botones de acción ---------------- #
-col1, col2, col3 = st.columns(3)
+if buscar:
+    st.session_state.filtrar = True
+
+# Filtrar datos según selección
+if "filtrar" in st.session_state and st.session_state.filtrar:
+    if nc_selected != "Todos":
+        df_nc = df_nc[df_nc["titulo"] == nc_selected]
+
+    if "fecha" in df_nc.columns:
+        df_nc = df_nc[(df_nc["fecha"] >= pd.to_datetime(fecha_inicio)) & 
+                      (df_nc["fecha"] <= pd.to_datetime(fecha_fin))]
+
+# ---------------- Mostrar tabla con estilos ---------------- #
+if not df_nc.empty:
+    df_nc = df_nc.sort_values(by="fecha", ascending=False).reset_index(drop=True)
+
+    def highlight_non_conform(val):
+        if val is False:  # Resaltar valores no conformes
+            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
+        return ''
+    
+    # Definir alias para las columnas
+    column_aliases = {
+        "titulo": "Título",
+        "fecha": "Fecha",
+        "operario": "Operario",
+        "nc_validada": "NC Validada",
+        "vqm_conforme": "VQM Conforme",
+        "descripcion_intervencion": "Causa",
+        "resultado_intervencion": "Resultado"
+    }
+
+    # Renombrar las columnas en el DataFrame
+    df_nc = df_nc.rename(columns=column_aliases)
+
+    # Mostrar la tabla en Streamlit con formato
+    st.dataframe(
+        df_nc.style.applymap(highlight_non_conform, 
+                            subset=["NC Validada", "VQM Conforme"]),
+        use_container_width=True
+    )
+
+else:
+    st.warning("No se encontraron datos para los filtros seleccionados.")
+
+# ---------------- Botones de exportación ---------------- #
+col1, col2 = st.columns([1, 1])
+
 with col1:
-    if st.button("🧹 Limpiar formulario"):
-        reset_form()
+    if st.button("📥 Exportar a CSV"):
+        df_nc.to_csv("datos_nc.csv", index=False)
+        st.success("Archivo CSV generado correctamente.")
 
 with col2:
-    if st.button("📧 Gestión de correos"):
-        st.warning("Funcionalidad pendiente de integración.")
-
-with col3:
-    if st.button("📥 Guardar"):
-        if not titulo or not fecha or not causa or not resultado:
-            st.error("❌ Faltan campos obligatorios: Título, Fecha, Causa, Resultado tras intervención.")
-        else:
-            nuevo_registro = {
-                "titulo": titulo,
-                "fecha": str(fecha),
-                "instrumento_medida": instrumento,
-                "maquina": maquina,
-                "operario": operador,
-                "descripcion_intervencion": descripcion,
-                "resultado_intervencion": resultado,
-                "efectos_producto": efectos_producto,
-                "efectos_proceso": efectos_proceso,
-                "acciones_nc": acciones_producto,
-                "fecha_acciones": str(fecha_acciones),
-                "nc_validada": nc_validada.lower() == "sí" if isinstance(nc_validada, str) else nc_validada,  
-                "vqm_conforme": vqm_conforme.lower() == "sí" if isinstance(vqm_conforme, str) else vqm_conforme,
-                "trimestre_anio": trimestre
-            }
-
-
-            try:
-                response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)
-                if response.status_code == 201:
-                    st.success("✅ No Conformidad guardada correctamente.")
-                else:
-                    st.error(f"❌ Error al guardar la No Conformidad: {response.text}")
-            except requests.exceptions.RequestException as e:
-                st.error(f"❌ Error en la conexión con la API: {str(e)}")
+    if st.button("📥 Exportar a Excel"):
+        df_nc.to_excel("datos_nc.xlsx", index=False)
+        st.success("Archivo Excel generado correctamente.")

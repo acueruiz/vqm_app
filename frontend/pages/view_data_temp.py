@@ -37,6 +37,7 @@ with st.sidebar.expander("📝 Formularios", expanded=False):
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
     st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
