@@ -1,16 +1,12 @@
 import streamlit as st
 import requests
-import datetime
+import pandas as pd
 import os
 
-# Configuración de la API Flask
+# Configuración de la API
 API_URL = "http://127.0.0.1:5000/vqm"
 
-# Configuración de la página
-st.set_page_config(page_title="Gestión de No Conformidades", layout="wide")
-
-# Encabezado
-st.markdown('<div class="header">TRATAMIENTO DE LAS NC DE LAS VQM</div>', unsafe_allow_html=True)
+st.set_page_config(page_title="Modificar VQM Temperatura", layout="wide")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -27,13 +23,13 @@ st.sidebar.title("MENÚ DE NAVEGACIÓN")
 # inicio
 st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
 
-# formularios
+# introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):
     st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
     st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
     st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
 
-# visualización de Datos
+# visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
     st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
@@ -127,76 +123,53 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ---------------- Formulario de No Conformidades ---------------- #
+st.title("🔧 Modificar Datos de VQM Temperatura")
 
-def reset_form():
-    for key in st.session_state.keys():
-        del st.session_state[key]
-    st.rerun()
+@st.cache_data
+def get_temperatura_data():
+    response = requests.get(f"{API_URL}/vqm_temperatura")
+    if response.status_code == 200:
+        return pd.DataFrame(response.json())
+    else:
+        st.error("Error al cargar los datos de temperatura.")
+        return pd.DataFrame()
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    titulo = st.text_input("Título")
-    maquina = st.text_input("Máquina")
-    descripcion = st.text_area("Descripción de la intervención")
-    efectos_producto = st.text_input("Posibles efectos sobre PRODUCTO")
-    efectos_proceso = st.text_input("Posibles efectos sobre PROCESO")
+df = get_temperatura_data()
 
-with col2:
-    fecha = st.date_input("Fecha", value=datetime.date.today())
-    operador = st.text_input("Operario")
-    causa = st.text_input("Causa")
-    acciones_producto = st.text_input("Si producto NC, acciones")
-    nc_validada = st.selectbox("NC validada", ["Pendiente", "Sí", "No"])
+if df.empty:
+    st.warning("No hay datos de temperatura disponibles.")
+    st.stop()
 
-with col3:
-    instrumento = st.text_input("Instrumento de medida")
-    trimestre = st.selectbox("Trimestre", ["1 Semestre", "2 Semestre", "3 Semestre", " Semestre"])
-    resultado = st.text_input("Resultado tras intervención")
-    fecha_acciones = st.date_input("Fecha acciones producto", value=datetime.date.today())
-    traza = st.text_input("Traza disponible", "NO HAY TRAZA GUARDADA", disabled=True)
-    vqm_conforme = st.selectbox("¿CONFORMIDAD?", ["Sí", "No"])
+# Selección de la máquina para editar
+maquinas = df["maquina"].unique()
+selected_maquina = st.selectbox("Selecciona la máquina:", maquinas)
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+# Filtrar datos de la máquina seleccionada
+df_filtered = df[df["maquina"] == selected_maquina]
 
-# ---------------- Botones de acción ---------------- #
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("🧹 Limpiar formulario"):
-        reset_form()
+if not df_filtered.empty:
+    row = df_filtered.iloc[0]
+    apelacion = st.text_input("Apelación", row["apelacion"])
+    receta = st.text_input("Receta", row["receta"])
+    temperatura_caida = st.number_input("Temperatura caída", value=row["temperatura_caida"], step=0.1)
+    media_calificacion = st.number_input("Media calificación", value=row["media_calificacion"], step=0.1)
+    fecha_calificacion = st.date_input("Fecha de calificación", pd.to_datetime(row["fecha_calificacion"]))
+    operario = st.text_input("Operario", row["operario"])
 
-with col2:
-    if st.button("📧 Gestión de correos"):
-        st.warning("Funcionalidad pendiente de integración.")
-
-with col3:
-    if st.button("📥 Guardar"):
-        if not titulo or not fecha or not causa or not resultado:
-            st.error("❌ Faltan campos obligatorios: Título, Fecha, Causa, Resultado tras intervención.")
+    if st.button("💾 Guardar Cambios"):
+        updated_data = {
+            "maquina": selected_maquina,
+            "apelacion": apelacion,
+            "receta": receta,
+            "temperatura_caida": temperatura_caida,
+            "media_calificacion": media_calificacion,
+            "fecha_calificacion": str(fecha_calificacion),
+            "operario": operario,
+        }
+        response = requests.put(f"{API_URL}/vqm_temperatura/{selected_maquina}", json=updated_data)
+        if response.status_code == 200:
+            st.success("✅ Datos actualizados correctamente.")
         else:
-            nuevo_registro = {
-                "titulo": titulo,
-                "fecha": str(fecha),
-                "instrumento_medida": instrumento,
-                "maquina": maquina,
-                "operario": operador,
-                "descripcion_intervencion": descripcion,
-                "resultado_intervencion": resultado,
-                "efectos_producto": efectos_producto,
-                "efectos_proceso": efectos_proceso,
-                "acciones_nc": acciones_producto,
-                "fecha_acciones": str(fecha_acciones),
-                "nc_validada": nc_validada.lower() == "sí" if isinstance(nc_validada, str) else nc_validada,  
-                "vqm_conforme": vqm_conforme.lower() == "sí" if isinstance(vqm_conforme, str) else vqm_conforme,
-                "trimestre_anio": trimestre
-            }
-
-
-            try:
-                response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)
-                if response.status_code == 201:
-                    st.success("✅ No Conformidad guardada correctamente.")
-                else:
-                    st.error(f"❌ Error al guardar la No Conformidad: {response.text}")
-            except requests.exceptions.RequestException as e:
-                st.error(f"❌ Error en la conexión con la API: {str(e)}")
+            st.error("❌ Error al actualizar los datos.")
+else:
+    st.warning("No se encontraron datos para la máquina seleccionada.")

@@ -39,6 +39,11 @@ with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
     st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
 
+# modificación de datos
+with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
+    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
+    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp", icon="🌡️")
+
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
     st.page_link("pages/users.py", label="Usuarios", icon="👥")
