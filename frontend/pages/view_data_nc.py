@@ -7,7 +7,7 @@ import os
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="Gestión de NC - Datos", layout="wide")
+st.set_page_config(page_title="Gestión de NC - Datos", layout="wide", page_icon="📋")
 
 # Encabezado
 st.markdown('<div class="header">GESTIÓN DE NC - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)

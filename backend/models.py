@@ -24,6 +24,15 @@ class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
     correos = relationship("CorreoUsuario", back_populates="usuario", cascade="all, delete")
     permisos = relationship("PermisoUsuario", back_populates="usuario", cascade="all, delete")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "nombre": self.nombre,
+            "admin": self.admin,
+            "password": self.password  # Puedes omitir la contraseña por seguridad
+        }
+
     # Métodos requeridos por Flask-Login
     def is_active(self):
         return True  # Indica que el usuario está activo y puede autenticarse

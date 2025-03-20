@@ -6,7 +6,7 @@ import os
 # Configuración de la API
 API_URL = "http://127.0.0.1:5000/vqm"
 
-st.set_page_config(page_title="Modificar Datos MDM", layout="wide")
+st.set_page_config(page_title="Modificar Datos MDM", layout="wide", page_icon="🛠")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")

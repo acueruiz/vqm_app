@@ -5,17 +5,17 @@ import pandas as pd
 import time
 import plotly.express as px
 
+# configurar API URL
+API_URL = "http://127.0.0.1:5000/vqm"
+
 # Verificar autenticación antes de mostrar la página
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
     st.warning("🔒 Debes iniciar sesión primero.")
     st.markdown('<meta http-equiv="refresh" content="0; URL=login.py">', unsafe_allow_html=True)
     st.stop()
 
-# configurar API URL
-API_URL = "http://127.0.0.1:5000/vqm"
-
 # configuración de la página
-st.set_page_config(page_title="Aplicación VQM", layout="wide")
+st.set_page_config(page_title="Aplicación VQM", layout="wide", page_icon="🏠")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -191,10 +191,10 @@ st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 # notificación en tiempo real sobre No Conformidades
 st.subheader("🚨 Estado de No Conformidades")
-response_nc = requests.get(f"{API_URL}/nc_abiertas")
+response_nc = requests.get(f"{API_URL}/tratamiento_nc_vqm")
 if response_nc.status_code == 200:
     nc_data = response_nc.json()
-    nc_count = nc_data.get("nc_abiertas", 0)
+    nc_count = len(nc_data)
 
     if nc_count > 0:
         st.warning(f"⚠️ Hay **{nc_count}** No Conformidades abiertas.")

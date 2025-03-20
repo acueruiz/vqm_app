@@ -59,12 +59,46 @@ def logout():
     logout_user()
     return redirect(url_for('vqm.login'))
 
+@api_blueprint.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    email = data.get('email')
+    nombre = data.get('nombre')
+    password = data.get('password')
+    
+    if Usuario.query.filter_by(email=email).first():
+        return jsonify({"error": "El usuario ya existe"}), 400
+    
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    nuevo_usuario = Usuario(email=email, nombre=nombre, password=hashed_password, admin=False)
+    db.session.add(nuevo_usuario)
+    db.session.commit()
+    return jsonify({"message": "Usuario registrado exitosamente"}), 201
+
 @api_blueprint.route('/protected', methods=['GET'])
 @login_required
 def protected():
     return jsonify({"message": f"Bienvenido, {current_user.nombre}"}), 200
 
-# obtener todos los registros de cualquier tabla
+# modificar usuario
+@api_blueprint.route('/vqm/usuarios/<string:email>', methods=['PUT'])
+def update_user(email):
+    user = Usuario.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    data = request.json
+
+    if "nombre" in data:
+        user.nombre = data["nombre"]
+    if "admin" in data:
+        user.admin = data["admin"]
+    if "password" in data:
+        user.password = bcrypt.generate_password_hash(data["password"]).decode('utf-8')
+
+    db.session.commit()
+    return jsonify({"message": "Usuario actualizado correctamente"}), 200
+
 @api_blueprint.route('/vqm/<string:modelo>', methods=['GET'])
 def get_all(modelo):
     if modelo in MODELOS:

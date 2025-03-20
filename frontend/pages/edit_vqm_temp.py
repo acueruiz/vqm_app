@@ -6,7 +6,7 @@ import os
 # Configuración de la API
 API_URL = "http://127.0.0.1:5000/vqm"
 
-st.set_page_config(page_title="Modificar VQM Temperatura", layout="wide")
+st.set_page_config(page_title="Modificar VQM Temperatura", layout="wide", page_icon="🛠")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -36,7 +36,7 @@ with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
     st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
 
 # modificación de datos
-with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
+with st.sidebar.expander("🛠 Modificación de Datos", expanded=False):
     st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
     st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp", icon="🌡️")
 

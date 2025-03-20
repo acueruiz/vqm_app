@@ -7,7 +7,7 @@ import os
 API_URL = "http://127.0.0.1:5000/vqm"
 
 # Configuración de la página
-st.set_page_config(page_title="Gestión de No Conformidades", layout="wide")
+st.set_page_config(page_title="Gestión de No Conformidades", layout="wide", page_icon="⚠️")
 
 # Encabezado
 st.markdown('<div class="header">TRATAMIENTO DE LAS NC DE LAS VQM</div>', unsafe_allow_html=True)
