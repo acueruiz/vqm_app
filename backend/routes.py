@@ -99,6 +99,21 @@ def update_user(email):
     db.session.commit()
     return jsonify({"message": "Usuario actualizado correctamente"}), 200
 
+# borrar usuario
+@api_blueprint.route('/vqm/usuarios/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    # Buscar el usuario en la base de datos
+    usuario = Usuario.query.get(id)
+
+    if not usuario:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    # Eliminar el usuario de la base de datos
+    db.session.delete(usuario)
+    db.session.commit()
+
+    return jsonify({"message": f"Usuario con ID {id} eliminado correctamente"}), 200
+
 @api_blueprint.route('/vqm/<string:modelo>', methods=['GET'])
 def get_all(modelo):
     if modelo in MODELOS:

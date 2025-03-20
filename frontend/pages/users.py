@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import os
+import time
 
 # Configurar API URL
 API_URL = "http://127.0.0.1:5000"
@@ -188,14 +189,22 @@ with st.expander("✏️ Modificar Usuario", expanded=False):
 # -------------------------------------- #
 with st.expander("🗑️ Borrar Usuario", expanded=False):
     if usuarios:
-        selected_user_to_delete = st.selectbox("🚨 Selecciona un usuario para eliminar", [u["email"] for u in usuarios])
+        # Crear un diccionario para mapear email con ID
+        email_to_id = {u["email"]: u["id"] for u in usuarios}
+        
+        # Mostrar emails en el desplegable
+        selected_email = st.selectbox("Selecciona un usuario para eliminar", list(email_to_id.keys()))
+        
+        # Obtener el ID correspondiente
+        selected_user_id = email_to_id[selected_email]
 
         if st.button("❌ Eliminar Usuario"):
-            response = requests.delete(f"{API_URL}/vqm/usuarios/{selected_user_to_delete}")
+            response = requests.delete(f"{API_URL}/vqm/usuarios/{selected_user_id}")
 
             if response.status_code == 200:
                 st.success("✅ Usuario eliminado correctamente.")
-                st.experimental_rerun()
+                time.sleep(1.5)
+                st.rerun()
             else:
                 st.error("⚠️ Error al eliminar el usuario.")
     else:
