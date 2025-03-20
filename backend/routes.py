@@ -1,9 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session, redirect, url_for
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10
+
+bcrypt = Bcrypt()
 
 # creamos la Blueprint llamada "vqm" que agrupará todas las rutas de la API (__init__.py)
 # para integrarse con la aplicación Flask
 api_blueprint = Blueprint('vqm', __name__)
+
+@api_blueprint.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Bienvenido a la API de VQM"}), 200
 
 # ruta de prueba, para ver si la app está activa
 @api_blueprint.route('/ping', methods=['GET'])
@@ -21,6 +29,40 @@ MODELOS = {
     "vqm_mdm": VqmMdm,
     "vqm_temperatura_mi10": VqmTemperaturaMI10
 }
+
+@api_blueprint.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    print(f"Intentando login con: {email} - {password}")  # <-- Añade esto para ver qué datos llegan
+
+    user = Usuario.query.filter_by(email=email).first()
+    
+    if user:
+        print(f"Usuario encontrado: {user.email}")  # <-- Para verificar que se encuentra el usuario en la BD
+    else:
+        print("Usuario no encontrado")  # <-- Si no lo encuentra, hay un problema con la consulta
+
+    if user and bcrypt.check_password_hash(user.password, password):
+        login_user(user)
+        print("Inicio de sesión exitoso")  # <-- Si llega aquí, la contraseña es correcta
+        return jsonify({"message": "Inicio de sesión exitoso"}), 200
+
+    print("Credenciales incorrectas")  # <-- Si no pasa, hay un problema con la comparación de contraseñas
+    return jsonify({"error": "Credenciales incorrectas"}), 401
+
+@api_blueprint.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('vqm.login'))
+
+@api_blueprint.route('/protected', methods=['GET'])
+@login_required
+def protected():
+    return jsonify({"message": f"Bienvenido, {current_user.nombre}"}), 200
 
 # obtener todos los registros de cualquier tabla
 @api_blueprint.route('/vqm/<string:modelo>', methods=['GET'])

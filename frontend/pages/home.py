@@ -5,6 +5,12 @@ import pandas as pd
 import time
 import plotly.express as px
 
+# Verificar autenticación antes de mostrar la página
+if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+    st.warning("🔒 Debes iniciar sesión primero.")
+    st.markdown('<meta http-equiv="refresh" content="0; URL=login.py">', unsafe_allow_html=True)
+    st.stop()
+
 # configurar API URL
 API_URL = "http://127.0.0.1:5000/vqm"
 
@@ -24,7 +30,7 @@ else:
 st.sidebar.title("MENÚ DE NAVEGACIÓN")
 
 # inicio
-st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
+st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):

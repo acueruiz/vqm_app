@@ -1,3 +1,0 @@
-Título,Fecha,Operario,NC Validada,VQM Conforme,Causa,Resultado
-asdd,2025-03-18,alex cue ruiz,True,True,sdfsd,sdfsd
-VQM NC del MDM31,2024-11-06,Sara Herreros-Hortelano,True,True,"Ajustar el módulo másico ya que tiene ruido parásito en el módulo másico de medida. Se interviene y se elimina este ruido, dejando el sistema robusto para que no vuelva a suceder. Esta solución se va a implementar en el resto de MDM del taller. Intervención realizada por Unai Villar (GTA) el día 12/11/2024 ",CONFORME

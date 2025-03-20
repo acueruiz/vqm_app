@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import db  # Importar la base de datos
+from flask_login import UserMixin  # Asegura compatibilidad con Flask-Login
 
 # clase Base para evitar repetir `id`
 class BaseModel(db.Model):
@@ -11,16 +12,30 @@ class BaseModel(db.Model):
         """Convierte cualquier modelo a diccionario automáticamente."""
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
-# modelo de Usuario
-class Usuario(BaseModel):
+class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
     __tablename__ = "usuarios"
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)
     nombre = Column(String, nullable=False)
+    password = Column(String, nullable=False)
     admin = Column(Boolean, default=False)
 
     correos = relationship("CorreoUsuario", back_populates="usuario", cascade="all, delete")
     permisos = relationship("PermisoUsuario", back_populates="usuario", cascade="all, delete")
+
+    # Métodos requeridos por Flask-Login
+    def is_active(self):
+        return True  # Indica que el usuario está activo y puede autenticarse
+
+    def get_id(self):
+        return str(self.id)  # Devuelve el ID como string para Flask-Login
+
+    def is_authenticated(self):
+        return True  # Indica que el usuario está autenticado
+
+    def is_anonymous(self):
+        return False  # No se usa en este caso
 
 # modelo de Correos de Usuarios
 class CorreoUsuario(BaseModel):

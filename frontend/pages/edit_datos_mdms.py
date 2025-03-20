@@ -21,7 +21,7 @@ else:
 st.sidebar.title("MENÚ DE NAVEGACIÓN")
 
 # inicio
-st.sidebar.page_link("home.py", label="Inicio", icon="🏠")
+st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):
