@@ -68,21 +68,19 @@ def protected():
 @api_blueprint.route('/register', methods=['POST'])
 def register():
     data = request.json
-    print("📥 Datos recibidos en Flask:", data)  # depuración en consola
     email = data.get('email')
     nombre = data.get('nombre')
     password = data.get('password')
-    admin = data.get('admin', False)  # obtener admin (False por defecto)
 
     if Usuario.query.filter_by(email=email).first():
         return jsonify({"error": "El usuario ya existe"}), 400
     
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
     nuevo_usuario = Usuario(
         email=email,
         nombre=nombre,
-        password=hashed_password,
-        admin=data.get('admin', False)  # usar el valor enviado o False por defecto
+        password=hashed_password
     )
     
     db.session.add(nuevo_usuario)
@@ -112,13 +110,13 @@ def update_user(email):
 # borrar un usuario
 @api_blueprint.route('/vqm/usuarios/<int:id>', methods=['DELETE'])
 def delete_user(id):
-    # Buscar el usuario en la base de datos
+    # buscar el usuario en la base de datos
     usuario = Usuario.query.get(id)
 
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    # Eliminar el usuario de la base de datos
+    # eliminar el usuario de la base de datos
     db.session.delete(usuario)
     db.session.commit()
 
