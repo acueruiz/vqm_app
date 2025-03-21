@@ -123,32 +123,38 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("👥 Gestión de Usuarios")
+st.title("Gestión de Usuarios")
 
 # Obtener lista de usuarios
 response = requests.get(f"{API_URL}/vqm/usuarios")
 usuarios = response.json() if response.status_code == 200 else []
 
 # -------------------------------------- #
-#  1️⃣ AÑADIR USUARIO
+#  AÑADIR USUARIO
 # -------------------------------------- #
-with st.expander("➕ Añadir Usuario", expanded=False):
+st.markdown("<h3 style='color: #0055A4;'>➕ Añadir Usuario</h3>", unsafe_allow_html=True)
+with st.expander("Expande para añadir un nuevo usuario", expanded=False):
     email = st.text_input("📧 Correo electrónico")
     nombre = st.text_input("👤 Nombre completo")
     password = st.text_input("🔑 Contraseña", type="password")
-    es_admin = st.checkbox("👑 Conceder permisos de Administrador")
+    es_admin = st.checkbox("Conceder permisos de Administrador")
 
     if st.button("📝 Crear Usuario"):
         if email and nombre and password:
-            response = requests.post(f"{API_URL}/register", json={
+            data_to_send = {
                 "email": email,
                 "nombre": nombre,
                 "password": password,
                 "admin": es_admin
-            })
+            }
+
+            st.write("📡 Datos enviados a la API:", data_to_send)  # 👈 Depuración
+
+            response = requests.post(f"{API_URL}/register", json=data_to_send)
 
             if response.status_code == 201:
                 st.success("✅ Usuario creado exitosamente.")
+                time.sleep(4)
                 st.rerun()
             elif response.status_code == 400:
                 st.error("❌ El usuario ya existe.")
@@ -158,15 +164,16 @@ with st.expander("➕ Añadir Usuario", expanded=False):
             st.warning("⚠️ Completa todos los campos.")
 
 # -------------------------------------- #
-#  2️⃣ MODIFICAR USUARIO
+#  MODIFICAR USUARIO
 # -------------------------------------- #
-with st.expander("✏️ Modificar Usuario", expanded=False):
+st.markdown("<h3 style='color: #0055A4;'>✏️ Modificar Usuario</h3>", unsafe_allow_html=True)
+with st.expander("Expande para modificar un usuario existente", expanded=False):
     if usuarios:
         selected_user = st.selectbox("🔄 Selecciona un usuario para modificar", [u["email"] for u in usuarios])
 
         nuevo_nombre = st.text_input("👤 Nuevo nombre completo", value="")
         nueva_password = st.text_input("🔑 Nueva contraseña (opcional)", type="password")
-        nuevo_admin = st.checkbox("👑 Convertir en Administrador", value=False)
+        nuevo_admin = st.checkbox("Convertir en Administrador", value=False)
 
         if st.button("💾 Guardar Cambios"):
             data = {"nombre": nuevo_nombre, "admin": nuevo_admin}
@@ -177,17 +184,18 @@ with st.expander("✏️ Modificar Usuario", expanded=False):
 
             if response.status_code == 200:
                 st.success("✅ Usuario modificado correctamente.")
-                st.experimental_rerun()
+                time.sleep(1.5)
+                st.rerun()
             else:
                 st.error("⚠️ Error al modificar el usuario.")
-
     else:
         st.warning("⚠️ No hay usuarios registrados.")
 
 # -------------------------------------- #
-#  3️⃣ BORRAR USUARIO
+#  BORRAR USUARIO
 # -------------------------------------- #
-with st.expander("🗑️ Borrar Usuario", expanded=False):
+st.markdown("<h3 style='color: #C70039;'>🗑️ Borrar Usuario</h3>", unsafe_allow_html=True)
+with st.expander("Expande para elegir el usuario a borrar", expanded=False):
     if usuarios:
         # Crear un diccionario para mapear email con ID
         email_to_id = {u["email"]: u["id"] for u in usuarios}
@@ -209,3 +217,4 @@ with st.expander("🗑️ Borrar Usuario", expanded=False):
                 st.error("⚠️ Error al eliminar el usuario.")
     else:
         st.warning("⚠️ No hay usuarios registrados.")
+

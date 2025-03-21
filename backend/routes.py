@@ -59,28 +59,38 @@ def logout():
     logout_user()
     return redirect(url_for('vqm.login'))
 
-@api_blueprint.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    email = data.get('email')
-    nombre = data.get('nombre')
-    password = data.get('password')
-    
-    if Usuario.query.filter_by(email=email).first():
-        return jsonify({"error": "El usuario ya existe"}), 400
-    
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    nuevo_usuario = Usuario(email=email, nombre=nombre, password=hashed_password, admin=False)
-    db.session.add(nuevo_usuario)
-    db.session.commit()
-    return jsonify({"message": "Usuario registrado exitosamente"}), 201
-
 @api_blueprint.route('/protected', methods=['GET'])
 @login_required
 def protected():
     return jsonify({"message": f"Bienvenido, {current_user.nombre}"}), 200
 
-# modificar usuario
+# crear un usuario
+@api_blueprint.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    print("📥 Datos recibidos en Flask:", data)  # depuración en consola
+    email = data.get('email')
+    nombre = data.get('nombre')
+    password = data.get('password')
+    admin = data.get('admin', False)  # obtener admin (False por defecto)
+
+    if Usuario.query.filter_by(email=email).first():
+        return jsonify({"error": "El usuario ya existe"}), 400
+    
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    nuevo_usuario = Usuario(
+        email=email,
+        nombre=nombre,
+        password=hashed_password,
+        admin=data.get('admin', False)  # usar el valor enviado o False por defecto
+    )
+    
+    db.session.add(nuevo_usuario)
+    db.session.commit()
+
+    return jsonify({"message": "Usuario registrado exitosamente"}), 201
+
+# modificar un usuario
 @api_blueprint.route('/vqm/usuarios/<string:email>', methods=['PUT'])
 def update_user(email):
     user = Usuario.query.filter_by(email=email).first()
@@ -99,7 +109,7 @@ def update_user(email):
     db.session.commit()
     return jsonify({"message": "Usuario actualizado correctamente"}), 200
 
-# borrar usuario
+# borrar un usuario
 @api_blueprint.route('/vqm/usuarios/<int:id>', methods=['DELETE'])
 def delete_user(id):
     # Buscar el usuario en la base de datos
