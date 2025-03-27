@@ -30,23 +30,10 @@ class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
             "email": self.email,
             "nombre": self.nombre,
             "admin": self.admin,
-            "password": self.password  # Puedes omitir la contraseña por seguridad
+            # "password": self.password --> se puede omitir la contraseña por seguridad
         }
 
-    # Métodos requeridos por Flask-Login
-    def is_active(self):
-        return True  # Indica que el usuario está activo y puede autenticarse
-
-    def get_id(self):
-        return str(self.id)  # Devuelve el ID como string para Flask-Login
-
-    def is_authenticated(self):
-        return True  # Indica que el usuario está autenticado
-
-    def is_anonymous(self):
-        return False  # No se usa en este caso
-
-# modelo de Correos de Usuarios
+# modelo de correos de usuarios
 class CorreoUsuario(BaseModel):
     __tablename__ = "correos_usuarios"
 

@@ -130,11 +130,11 @@ response = requests.get(f"{API_URL}/vqm/usuarios")
 usuarios = response.json() if response.status_code == 200 else []
 
 # añadir usuario
-st.markdown("<h3 style='color: #0055A4;'>➕ Añadir Usuario</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #0055A4;'>Añadir Usuario</h3>", unsafe_allow_html=True)
 with st.expander("Expande para añadir un nuevo usuario", expanded=False):
-    email = st.text_input("📧 Correo electrónico")
-    nombre = st.text_input("👤 Nombre completo")
-    password = st.text_input("🔑 Contraseña", type="password")
+    email = st.text_input("Correo electrónico")
+    nombre = st.text_input("Nombre completo")
+    password = st.text_input("Contraseña", type="password")
 
     if st.button("📝 Crear Usuario"):
         if email and nombre and password:
@@ -158,13 +158,13 @@ with st.expander("Expande para añadir un nuevo usuario", expanded=False):
             st.warning("⚠️ Completa todos los campos.")
 
 # modificar usuario
-st.markdown("<h3 style='color: #0055A4;'>✏️ Modificar usuario o hacerle administrador</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #0055A4;'>Modificar usuario o hacerle administrador</h3>", unsafe_allow_html=True)
 with st.expander("Expande para modificar un usuario existente", expanded=False):
     if usuarios:
         selected_user = st.selectbox("🔄 Selecciona un usuario para modificar", [u["email"] for u in usuarios])
 
-        nuevo_nombre = st.text_input("👤 Nuevo nombre completo", value="")
-        nueva_password = st.text_input("🔑 Nueva contraseña (opcional)", type="password")
+        nuevo_nombre = st.text_input("Nuevo nombre completo", value="")
+        nueva_password = st.text_input("Nueva contraseña (opcional)", type="password")
         nuevo_admin = st.checkbox("Convertir en Administrador", value=False)
 
         if st.button("💾 Guardar Cambios"):
@@ -184,7 +184,7 @@ with st.expander("Expande para modificar un usuario existente", expanded=False):
         st.warning("⚠️ No hay usuarios registrados.")
 
 # borrar usuario
-st.markdown("<h3 style='color: #C70039;'>🗑️ Borrar Usuario</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #C70039;'>Borrar Usuario</h3>", unsafe_allow_html=True)
 with st.expander("Expande para elegir el usuario a borrar", expanded=False):
     if usuarios:
         # crear un diccionario para mapear email con ID

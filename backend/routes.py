@@ -5,8 +5,7 @@ from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, 
 
 bcrypt = Bcrypt()
 
-# creamos la Blueprint llamada "vqm" que agrupará todas las rutas de la API (__init__.py)
-# para integrarse con la aplicación Flask
+# creamos la Blueprint llamada "vqm" que agrupará todas las rutas de la API (__init__.py) para integrarse con la aplicación Flask
 api_blueprint = Blueprint('vqm', __name__)
 
 @api_blueprint.route('/', methods=['GET'])
@@ -53,7 +52,7 @@ def login():
     print("Credenciales incorrectas")  # <-- Si no pasa, hay un problema con la comparación de contraseñas
     return jsonify({"error": "Credenciales incorrectas"}), 401
 
-@api_blueprint.route('/logout')
+@api_blueprint.route('/logout') # por implementar!!! <-----------------------------------------------------
 @login_required
 def logout():
     logout_user()
@@ -158,7 +157,7 @@ def create_record(modelo):
     
     return jsonify({"error": "Modelo no encontrado"}), 404
 
-# actualizar vqm temperatura (usa "maquina")
+# actualizar vqm temperatura (usando "máquina")
 @api_blueprint.route('/vqm/<string:modelo>/<string:maquina>', methods=['PUT'])
 def update_record_by_maquina(modelo, maquina):
     if modelo in MODELOS:
@@ -174,7 +173,7 @@ def update_record_by_maquina(modelo, maquina):
         return jsonify({"message": f"Registro {maquina} actualizado en {modelo}"}), 200
     return jsonify({"error": "Modelo no encontrado"}), 404
 
-# actualizar datos mdm (usa "masico")
+# actualizar datos mdm (usa "másico")
 @api_blueprint.route('/vqm/<string:modelo>/<string:masico>', methods=['PUT'])
 def update_record_by_masico(modelo, masico):
     if modelo in MODELOS:
@@ -191,7 +190,7 @@ def update_record_by_masico(modelo, masico):
     return jsonify({"error": "Modelo no encontrado"}), 404
 
 # eliminar un registro por ID
-@api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['DELETE'])
+@api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['DELETE']) # por implementar!!!! <--------------------------------------
 def delete_record(modelo, id):
     if modelo in MODELOS:
         registro = MODELOS[modelo].query.get(id)

@@ -17,7 +17,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🔐 Iniciar Sesión")
+st.title("Iniciar sesión")
 
 # Estado de autenticación en la sesión de Streamlit
 if "authenticated" not in st.session_state:
