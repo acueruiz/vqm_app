@@ -31,9 +31,9 @@ with st.sidebar.expander("📝 Formularios", expanded=False):
 
 # visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
-    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
+    st.page_link("pages/view_data.py", label="Histórico VQMs MDM", icon="📋")
+    st.page_link("pages/view_data_temp.py", label="Histórico VQMs temperaturas MI", icon="🌡️")
+    st.page_link("pages/view_data_nc.py", label="Histórico VQMs no conformes", icon="⚠️")
 
 # modificación de datos
 with st.sidebar.expander("🛠 Modificación de Datos", expanded=False):
