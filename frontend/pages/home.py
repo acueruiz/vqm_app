@@ -34,107 +34,137 @@ st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):
-    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
-    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
-    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
 # visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
-    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
+    st.page_link("pages/view_data.py", label="Ver Datos MDM")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 
 # modificación de datos
 with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
-    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
-    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp", icon="🌡️")
+    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM")
+    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
-    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
+    st.page_link("pages/users.py", label="Gestión de usuarios")
+    st.page_link("pages/correos.py", label="Gestión de correos")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
 
 # estilos CSS personalizados
-st.markdown(
-    """
+st.markdown("""
     <style>
+        /* Global app style */
+        html, body, [data-testid="stApp"] {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #0f1117;
+            color: #f5f5f5;
+        }
 
-        /* Oculta el menú de navegación automático de Streamlit */
+        /* Sidebar */
+        [data-testid="stSidebar"] {
+            background-color: #14161c;
+            padding-top: 10px;
+        }
+
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+            color: #ffffff;
+        }
+
         [data-testid="stSidebarNav"] {
             display: none !important;
         }
 
-        [data-testid="stSidebar"] {
-            padding-top: 0px !important; /* Reduce el padding superior del sidebar */
-        }
-        
         [data-testid="stImage"] img {
-            margin-top: -30px !important; /* Reduce el espacio superior del logo */
-            margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
+            margin-top: -20px;
+            margin-bottom: -15px;
         }
-    
-        /* Encabezados mejorados */
+
+        /* Header corporativo */
         .header {
             text-align: center;
             background-color: #0055A4;
-            padding: 15px;
+            padding: 20px 40px;
             color: white;
-            font-size: 24px;
-            font-weight: bold;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
-        /* Botones personalizados */
+        /* Section separator */
+        .separator {
+            border-bottom: 2px solid #0055A4;
+            margin: 40px 0;
+        }
+
+        /* Custom buttons */
         .stButton > button {
             background-color: #0055A4;
             color: white;
-            font-size: 16px;
-            padding: 10px 15px;
-            border-radius: 8px;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 10px;
             border: none;
-            transition: 0.3s;
+            transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
         .stButton > button:hover {
-            background-color: #003C7E;
-            transform: scale(1.05);
+            background-color: #003c7e;
+            transform: scale(1.03);
         }
 
-        /* Separadores visuales */
-        .separator {
-            border-bottom: 3px solid #0055A4;
-            margin: 30px 0;
+        /* Custom metric text */
+        [data-testid="stMetricValue"] {
+            font-size: 26px;
+            font-weight: bold;
+            color: #00C49F;
         }
 
-        /* Mejora en la tabla de datos */
+        [data-testid="stMetricLabel"] {
+            font-size: 16px;
+            color: #cccccc;
+        }
+
+        /* Dataframe table */
         .dataframe {
             border-collapse: collapse;
             width: 100%;
-            background-color: white;
+            background-color: #ffffff;
             border: 1px solid #ddd;
-        }
-
-        .dataframe th, .dataframe td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         .dataframe th {
             background-color: #0055A4;
             color: white;
             text-align: left;
+            padding: 10px;
+        }
+
+        .dataframe td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            color: #333333;
+        }
+
+        /* Spinner overlay */
+        .stSpinner {
+            color: #0055A4 !important;
         }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # encabezado principal
-st.markdown('<div class="header">PÁGINA DE INICIO - Análisis de VQM</div>', unsafe_allow_html=True)
+st.markdown('<div class="header"><h1>Análisis de VQMs</h1></div>', unsafe_allow_html=True)
 
 # cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):
