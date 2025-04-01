@@ -201,3 +201,33 @@ def delete_record(modelo, id):
         db.session.commit()
         return jsonify({"message": f"Registro {id} eliminado de {modelo}"}), 200
     return jsonify({"error": "Modelo no encontrado"}), 404
+
+# rutas para gestión de correos por departamento
+
+@api_blueprint.route('/correos/departamento/<string:departamento>', methods=['GET'])
+def get_correos_por_departamento(departamento):
+    correos = CorreoUsuario.query.filter_by(departamento=departamento).all()
+    return jsonify([c.to_dict() for c in correos]), 200
+
+@api_blueprint.route('/correos', methods=['POST'])
+def add_correo():
+    data = request.json
+    nuevo = CorreoUsuario(
+        email=data["email"],
+        nombre=data.get("nombre", ""),
+        departamento=data["departamento"],
+        tipo_notificacion=data.get("tipo_notificacion", "vqm_nc"),
+        activo=data.get("activo", True)
+    )
+    db.session.add(nuevo)
+    db.session.commit()
+    return jsonify({"message": "Correo añadido"}), 201
+
+@api_blueprint.route('/correos/<int:id>', methods=['DELETE'])
+def delete_correo(id):
+    correo = CorreoUsuario.query.get(id)
+    if not correo:
+        return jsonify({"error": "Correo no encontrado"}), 404
+    db.session.delete(correo)
+    db.session.commit()
+    return jsonify({"message": "Correo eliminado"}), 200

@@ -37,11 +37,26 @@ class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
 class CorreoUsuario(BaseModel):
     __tablename__ = "correos_usuarios"
 
-    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
-    tipo_notificacion = Column(String, nullable=False)
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=True)
+    email = Column(String, nullable=False)
+    nombre = Column(String, nullable=True)
+    departamento = Column(String, nullable=False)
+    tipo_notificacion = Column(String, nullable=False)  # ej: "VQM_Bascula", "VQM_MDM"
     activo = Column(Boolean, default=True)
 
-    usuario = relationship("Usuario", back_populates="correos")
+    usuario = relationship("Usuario", back_populates="correos", lazy="joined")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "usuario_id": self.usuario_id,
+            "email": self.email,
+            "nombre": self.nombre,
+            "departamento": self.departamento,
+            "tipo_notificacion": self.tipo_notificacion,
+            "activo": self.activo
+        }
 
 # modelo de Permisos de Usuarios
 class PermisoUsuario(BaseModel):

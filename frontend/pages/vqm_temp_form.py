@@ -47,7 +47,8 @@ with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Usuarios", icon="👥")
+    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
+    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")

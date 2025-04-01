@@ -6,7 +6,7 @@ import time
 # Configurar API URL
 API_URL = "http://127.0.0.1:5000"
 
-st.set_page_config(page_title="Gestión de Usuarios", page_icon="👥", layout="wide")
+st.set_page_config(page_title="Gestión de usuarios", page_icon="👥", layout="wide")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -42,7 +42,8 @@ with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Usuarios", icon="👥")
+    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
+    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
@@ -123,20 +124,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("Gestión de Usuarios")
+st.title("Gestión de usuarios")
 
 # Obtener lista de usuarios
 response = requests.get(f"{API_URL}/vqm/usuarios")
 usuarios = response.json() if response.status_code == 200 else []
 
 # añadir usuario
-st.markdown("<h3 style='color: #0055A4;'>Añadir Usuario</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #0055A4;'>Añadir usuario</h3>", unsafe_allow_html=True)
 with st.expander("Expande para añadir un nuevo usuario", expanded=False):
     email = st.text_input("Correo electrónico")
     nombre = st.text_input("Nombre completo")
     password = st.text_input("Contraseña", type="password")
 
-    if st.button("📝 Crear Usuario"):
+    if st.button("📝 Crear usuario"):
         if email and nombre and password:
             data_to_send = {
                 "email": email,
@@ -167,7 +168,7 @@ with st.expander("Expande para modificar un usuario existente", expanded=False):
         nueva_password = st.text_input("Nueva contraseña (opcional)", type="password")
         nuevo_admin = st.checkbox("Convertir en Administrador", value=False)
 
-        if st.button("💾 Guardar Cambios"):
+        if st.button("💾 Guardar cambios"):
             data = {"nombre": nuevo_nombre, "admin": nuevo_admin}
             if nueva_password:
                 data["password"] = nueva_password  # Solo cambia la contraseña si se proporciona
@@ -184,7 +185,7 @@ with st.expander("Expande para modificar un usuario existente", expanded=False):
         st.warning("⚠️ No hay usuarios registrados.")
 
 # borrar usuario
-st.markdown("<h3 style='color: #C70039;'>Borrar Usuario</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #C70039;'>Borrar usuario</h3>", unsafe_allow_html=True)
 with st.expander("Expande para elegir el usuario a borrar", expanded=False):
     if usuarios:
         # crear un diccionario para mapear email con ID
