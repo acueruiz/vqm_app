@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import db  # Importar la base de datos
 from flask_login import UserMixin  # Asegura compatibilidad con Flask-Login
@@ -99,11 +99,26 @@ class TratamientoNCVqm(BaseModel):
     vqm_conforme = Column(Boolean)
     descripcion_intervencion = Column(String)
     resultado_intervencion = Column(String)
+    causa_fallo = Column(String)  # nuevo
     efectos_proceso = Column(String)
     efectos_producto = Column(String)
     acciones_nc = Column(String)
     nc_validada = Column(Boolean)
     fecha_acciones = Column(Date)
+
+    # nuevos campos
+    resuelto_producto = Column(Boolean)
+    acciones_producto = Column(Text)
+    traza_producto_nombre = Column(String)  # solo el nombre/ruta del archivo
+    afecta_producto = Column(Boolean)
+
+    resuelto_proceso = Column(Boolean)
+    acciones_proceso = Column(Text)
+    afecta_proceso = Column(Boolean)
+
+    comentarios_validacion = Column(Text)
+    producto_nc = Column(Boolean)
+    acciones_producto_nc = Column(Text)
 
     def to_dict(self):
         data = super().to_dict()
