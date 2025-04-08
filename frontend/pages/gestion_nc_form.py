@@ -152,7 +152,7 @@ with col2:
 
 with col3:
     instrumento = st.text_input("Instrumento de medida")
-    trimestre = st.selectbox("Trimestre", ["1 Semestre", "2 Semestre", "3 Semestre", " Semestre"])
+    trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
     resultado = st.text_input("Resultado tras intervención")
     fecha_acciones = st.date_input("Fecha acciones producto", value=datetime.date.today())
     traza = st.text_input("Traza disponible", "NO HAY TRAZA GUARDADA", disabled=True)
@@ -191,7 +191,6 @@ with col3:
                 "vqm_conforme": vqm_conforme.lower() == "sí" if isinstance(vqm_conforme, str) else vqm_conforme,
                 "trimestre_anio": trimestre
             }
-
 
             try:
                 response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)

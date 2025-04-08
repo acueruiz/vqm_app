@@ -30,7 +30,7 @@ class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
             "email": self.email,
             "nombre": self.nombre,
             "admin": self.admin,
-            # "password": self.password --> se puede omitir la contraseña por seguridad
+          # "password": self.password --> se puede omitir la contraseña por seguridad
         }
 
 # modelo de correos de usuarios

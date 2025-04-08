@@ -147,7 +147,7 @@ col1, col2 = st.columns(2)
 with col1:
     trimestre = st.selectbox("Trimestre", ["Primer Trimestre 2025", "Segundo Trimestre 2025", "Tercer Trimestre 2025", "Cuarto Trimestre 2025"], key="trimestre_main")
     maquina = st.selectbox("Máquina", df_vqm_temp["maquina"].unique(), key="maquina_main")
-    operador = st.text_input("Operador", key="operador_main")
+    operador = st.text_input("Operador", value=st.session_state.get("user_name", ""), disabled=True)
 
 with col2:
     filtro_maquina = df_vqm_temp[df_vqm_temp["maquina"] == maquina].iloc[0]

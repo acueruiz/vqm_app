@@ -29,27 +29,32 @@ MODELOS = {
     "vqm_temperatura_mi10": VqmTemperaturaMI10
 }
 
+# iniciar sesión con usuario previamente creado
 @api_blueprint.route('/login', methods=['POST'])
 def login():
     data = request.json
     email = data.get('email')
     password = data.get('password')
 
-    print(f"Intentando login con: {email} - {password}")  # <-- Añade esto para ver qué datos llegan
+    print(f"Intentando login con: {email} - {password}")
 
     user = Usuario.query.filter_by(email=email).first()
-    
+
     if user:
-        print(f"Usuario encontrado: {user.email}")  # <-- Para verificar que se encuentra el usuario en la BD
+        print(f"Usuario encontrado: {user.email}")
     else:
-        print("Usuario no encontrado")  # <-- Si no lo encuentra, hay un problema con la consulta
+        print("Usuario no encontrado")
 
     if user and bcrypt.check_password_hash(user.password, password):
         login_user(user)
-        print("Inicio de sesión exitoso")  # <-- Si llega aquí, la contraseña es correcta
-        return jsonify({"message": "Inicio de sesión exitoso"}), 200
+        print("Inicio de sesión exitoso")
+        return jsonify({
+            "message": "Inicio de sesión exitoso",
+            "email": user.email,
+            "nombre": user.nombre
+        }), 200  # <--- Aquí devuelves más datos
 
-    print("Credenciales incorrectas")  # <-- Si no pasa, hay un problema con la comparación de contraseñas
+    print("Credenciales incorrectas")
     return jsonify({"error": "Credenciales incorrectas"}), 401
 
 @api_blueprint.route('/logout') # por implementar!!! <-----------------------------------------------------

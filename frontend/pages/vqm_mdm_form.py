@@ -163,7 +163,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     circuito = st.text_input("Circuito", mdm_details.get("circuito", ""), disabled=True)
-    operador = st.text_input("Operador", "")
+    operador = st.text_input("Operador", value=st.session_state.get("user_name", ""), disabled=True)
 
 with col2:
     bascula = st.text_input("Báscula", mdm_details.get("bascula", ""), disabled=True)
