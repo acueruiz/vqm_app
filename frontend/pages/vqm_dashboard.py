@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from streamlit_echarts import st_echarts
+import base64
 
 API_URL = "http://127.0.0.1:5000"
 
@@ -120,31 +120,55 @@ st.markdown(
 st.markdown("---")
 st.subheader("📄 Informes de NC generados")
 
-# Ruta donde se guardan los informes
 carpeta_informes = "C:\\Users\\acuer\\OneDrive\\Escritorio\\informes"
 
-# Verificar si hay informes
 if os.path.exists(carpeta_informes):
-    informes = [f for f in os.listdir(carpeta_informes) if f.endswith(".html")]
+    informes = [f for f in os.listdir(carpeta_informes) if f.endswith((".html", ".pdf"))]
 
     if informes:
         informe_seleccionado = st.selectbox("Selecciona un informe:", sorted(informes, reverse=True))
 
         ruta_informe = os.path.join(carpeta_informes, informe_seleccionado)
-        with open(ruta_informe, "r", encoding="utf-8") as f:
-            contenido_html = f.read()
 
-        st.components.v1.html(
-            f"""
-            <div style='display: flex; justify-content: center; padding: 20px;'>
-                <div style='background: white; width: 794px; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.2);'>
-                    {contenido_html}
+        if informe_seleccionado.endswith(".html"):
+            with open(ruta_informe, "r", encoding="utf-8") as f:
+                contenido_html = f.read()
+
+            st.components.v1.html(
+                f"""
+                <div style='display: flex; justify-content: center; padding: 20px;'>
+                    <div style='width: 794px; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.2);'>
+                        {contenido_html}
+                    </div>
                 </div>
-            </div>
-            """,
-            height=1200,
-            scrolling=True
-        )
+                """,
+                height=1200,
+                scrolling=True
+            )
+
+        elif informe_seleccionado.endswith(".pdf"):
+            ruta_pdf = os.path.join(carpeta_informes, informe_seleccionado)
+
+            with open(ruta_pdf, "rb") as f:
+                pdf_data = f.read()
+                pdf_base64 = base64.b64encode(pdf_data).decode("utf-8")
+
+            # Botón de descarga opcional
+            st.download_button("📥 Descargar PDF", data=pdf_data, file_name=informe_seleccionado, mime="application/pdf")
+
+            st.markdown("### Vista previa del PDF")
+            st.markdown(
+                f"""
+                <iframe 
+                    src="data:application/pdf;base64,{pdf_base64}" 
+                    width="794px" 
+                    height="1123px" 
+                    style="border:none; display: block; margin-left: auto; margin-right: auto;"
+                    type="application/pdf">
+                </iframe>
+                """,
+                unsafe_allow_html=True
+            )
 
     else:
         st.info("No hay informes generados todavía.")

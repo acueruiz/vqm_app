@@ -252,8 +252,9 @@ if nc_validada == "Sí con acciones":
 
 # ---------------- Guardado de datos en la BBDD ---------------- #
 
-def enviar_datos():
+from weasyprint import HTML  # Asegúrate de haber instalado weasyprint y las dependencias del sistema
 
+def enviar_datos():
     # Guardar archivo subido (traza del producto) localmente con nombre único basado en fecha y contador
     nombre_archivo = None
     fecha_str = datetime.date.today().strftime("%Y%m%d")
@@ -304,18 +305,18 @@ def enviar_datos():
         "vqm_conforme": None  # --> esto se ajustará en un futuro
     }
 
-    # limpiar campos vacíos antes de enviar
+    # Filtrar campos vacíos antes de enviar
     nuevo_registro = {k: v for k, v in nuevo_registro.items() if v is not None}
 
     try:
         response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)
         if response.status_code == 201:
             st.success("✅ No Conformidad guardada correctamente.")
-            # 📄 Generar informe HTML tras guardar la NC
+            # 📄 Generar informe PDF tras guardar la NC usando Jinja2
             env = Environment(loader=FileSystemLoader("templates"))
             template = env.get_template("informe_nc.html")
 
-            # Pasar todos los campos rellenados (solo si tienen valor)
+            # Preparar el contexto: filtrar los campos vacíos para no mostrarlos en el informe
             contexto_nc = {
                 "titulo": titulo,
                 "fecha": str(fecha),
@@ -339,35 +340,24 @@ def enviar_datos():
                 "producto_nc": st.session_state.get("producto_nc_radio") if nc_validada == "No" else None,
                 "acciones_producto_nc": acciones_producto_nc if nc_validada == "No" and st.session_state.get("producto_nc_radio") == "Sí" else None
             }
-
-            # Filtrar campos vacíos para no mostrar en informe
+            # Remover claves con valores vacíos
             contexto_nc = {k: v for k, v in contexto_nc.items() if v not in [None, "", []]}
 
-            # Renderizar y guardar
+            # Renderizar el HTML del informe
             html_content = template.render(nc=contexto_nc)
 
             carpeta_informes = "C:\\Users\\acuer\\OneDrive\\Escritorio\\informes"
             os.makedirs(carpeta_informes, exist_ok=True)
-            nombre_base = f"Informe_{titulo}_{fecha_str}.html"
-            ruta_html = os.path.join(carpeta_informes, nombre_base + ".html")
+            nombre_base = f"Informe_{titulo}_{fecha_str}"
             ruta_pdf = os.path.join(carpeta_informes, nombre_base + ".pdf")
 
-            # Guardar HTML (opcional, por si quieres conservarlo)
-            with open(ruta_html, "w", encoding="utf-8") as f:
-                f.write(html_content)
-
-            # Convertir a PDF directamente desde string HTML
+            # Convertir el HTML a PDF y guardarlo
             HTML(string=html_content).write_pdf(ruta_pdf)
 
-            with open(ruta_html, "w", encoding="utf-8") as f:
-                f.write(html_content)
-
-            st.success(f"📝 Informe generado: {nombre_base}")
             st.success(f"📄 PDF generado: {nombre_base}.pdf")
             time.sleep(1.5)
             st.rerun()
 
-                        
         else:
             st.error(f"❌ Error al guardar la NC: {response.text}")
     except requests.exceptions.RequestException as e:
