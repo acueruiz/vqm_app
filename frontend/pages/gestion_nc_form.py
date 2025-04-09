@@ -3,6 +3,8 @@ import requests
 import datetime
 import os
 from jinja2 import Environment, FileSystemLoader
+import time
+from weasyprint import HTML
 
 # Configuración de la API Flask
 API_URL = "http://127.0.0.1:5000/vqm"
@@ -28,22 +30,22 @@ st.sidebar.title("MENÚ DE NAVEGACIÓN")
 st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 with st.sidebar.expander("📝 Formularios", expanded=False):
-    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
-    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
-    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
-    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
+    st.page_link("pages/view_data.py", label="Ver Datos MDM")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 
 with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
-    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
-    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp", icon="🌡️")
+    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM")
+    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp")
 
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
-    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
+    st.page_link("pages/users.py", label="Gestión de usuarios")
+    st.page_link("pages/correos.py", label="Gestión de correos")
 
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
 
@@ -346,13 +348,24 @@ def enviar_datos():
 
             carpeta_informes = "C:\\Users\\acuer\\OneDrive\\Escritorio\\informes"
             os.makedirs(carpeta_informes, exist_ok=True)
-            nombre_informe = f"Informe_{titulo}_{fecha_str}.html"
-            ruta_html = os.path.join(carpeta_informes, nombre_informe)
+            nombre_base = f"Informe_{titulo}_{fecha_str}.html"
+            ruta_html = os.path.join(carpeta_informes, nombre_base + ".html")
+            ruta_pdf = os.path.join(carpeta_informes, nombre_base + ".pdf")
+
+            # Guardar HTML (opcional, por si quieres conservarlo)
+            with open(ruta_html, "w", encoding="utf-8") as f:
+                f.write(html_content)
+
+            # Convertir a PDF directamente desde string HTML
+            HTML(string=html_content).write_pdf(ruta_pdf)
 
             with open(ruta_html, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
-            st.success(f"📝 Informe generado: {nombre_informe}")
+            st.success(f"📝 Informe generado: {nombre_base}")
+            st.success(f"📄 PDF generado: {nombre_base}.pdf")
+            time.sleep(1.5)
+            st.rerun()
 
                         
         else:

@@ -1,115 +1,220 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Informe No Conformidad - {{ nc.titulo }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            background-color: #0055A4;
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
-        }
-        h2 {
-            border-bottom: 2px solid #0055A4;
-            color: #0055A4;
-            margin-top: 30px;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .label {
-            font-weight: bold;
-        }
-        .field {
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Informe NC - {{ nc.titulo }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: transparent;
+      color: black;
+      font-size: 14px;
+      max-width: 794px; /* A4 width at 96dpi */
+      margin: 40px auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .title-box {
+      background-color: #FFD700;
+      border: 1px solid black;
+      text-align: center;
+      font-weight: bold;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .section-box {
+      border: 1px solid black;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      background-color: #d9d9d9;
+      text-align: center;
+      font-weight: bold;
+      padding: 5px;
+      border: 1px solid black;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+
+    .data-row span {
+      flex: 1;
+    }
+
+    .instructions {
+      font-size: 12px;
+      color: #0055A4;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .intervencion-box {
+      border: 1px solid black;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .resultado-line {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .resultado-line span {
+      margin-right: 20px;
+    }
+
+    .verificacion-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .verificacion-table th,
+    .verificacion-table td {
+      border: 1px solid black;
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .verificacion-header {
+      background-color: #d9d9d9;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .firma-line {
+      margin-top: 30px;
+      border-top: 1px solid black;
+      padding-top: 10px;
+      font-size: 13px;
+    }
+
+    .footer-box {
+      border: 1px solid black;
+      padding: 10px;
+      margin-top: 30px;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .checkbox {
+      font-family: monospace;
+    }
+  </style>
 </head>
 <body>
-    <h1>Informe de No Conformidad</h1>
 
-    <div class="section">
-        <h2>Datos Generales</h2>
-        {% for key, label in {
-            'titulo': 'Título',
-            'fecha': 'Fecha',
-            'instrumento_medida': 'Instrumento de Medida',
-            'maquina': 'Máquina',
-            'operario': 'Operario',
-            'trimestre_anio': 'Trimestre'
-        }.items() %}
-            {% if nc[key] is defined %}
-                <div class="field"><span class="label">{{ label }}:</span> {{ nc[key] }}</div>
-            {% endif %}
-        {% endfor %}
+  <div class="title-box">
+    TRATAMIENTO DE LAS NC DE LA VQM (o calibración)
+  </div>
+
+  <div class="section-box">
+    <div class="section-title">Causa de la no conformidad</div>
+
+    <div class="data-row">
+      <span><strong>Instrumento de medida:</strong> {{ nc.instrumento_medida }}</span>
+      <span><strong>Nº Identificador másico:</strong> {{ nc.id_masico or '---' }}</span>
+    </div>
+    <div class="data-row">
+      <span><strong>Máquina:</strong> {{ nc.maquina }}</span>
+      <span><strong>Operario:</strong> {{ nc.operario }}</span>
+      <span><strong>Fecha:</strong> {{ nc.fecha }}</span>
+      <span><strong>Eq./Turno:</strong> {{ nc.turno or '---' }}</span>
+    </div>
+    <div class="data-row">
+      <span><strong>Causa:</strong> {{ nc.causa_fallo }}</span>
+    </div>
+  </div>
+
+  <div class="instructions">
+    Si es necesaria la intervención de Mantenimiento, entregar el formulario a Mantenimiento.<br>
+    Si no es necesaria la intervención de Mantenimiento, entregar el formulario al Tco. Dominio Proceso
+  </div>
+
+  <div class="section-box">
+    <div class="section-title">Actuación de mantenimiento</div>
+
+    <div class="intervencion-box">
+      <p><strong>Descripción de la intervención:</strong><br>
+      {{ nc.descripcion_intervencion }}</p>
+
+      <p class="resultado-line">Resultado de la verificación posterior a la intervención:<br>
+        Conforme: 
+        <span class="checkbox">Sí {% if nc.resultado_intervencion == 'Sí' %}☒{% else %}☐{% endif %}</span>
+        <span class="checkbox">No {% if nc.resultado_intervencion == 'No' %}☒{% else %}☐{% endif %}</span>
+      </p>
     </div>
 
-    <div class="section">
-        <h2>Intervención</h2>
-        {% for key, label in {
-            'descripcion_intervencion': 'Descripción',
-            'resultado_intervencion': 'Resultado',
-            'causa_fallo': 'Causa del fallo'
-        }.items() %}
-            {% if nc[key] is defined %}
-                <div class="field"><span class="label">{{ label }}:</span> {{ nc[key] }}</div>
-            {% endif %}
-        {% endfor %}
+    <div class="instructions">
+      Entregar el formulario cumplimentado a Téc. Dominio Proceso
     </div>
+  </div>
 
-    {% if nc.afecta_producto %}
-    <div class="section">
-        <h2>Afectación al Producto</h2>
-        <div class="field"><span class="label">¿Afecta al producto?:</span> Sí</div>
-        {% if nc.resuelto_producto %}
-            <div class="field"><span class="label">¿Resuelto?:</span> {{ nc.resuelto_producto }}</div>
-        {% endif %}
-        {% if nc.acciones_producto %}
-            <div class="field"><span class="label">Acciones tomadas:</span> {{ nc.acciones_producto }}</div>
-        {% endif %}
-        {% if nc.traza_producto_nombre %}
-            <div class="field"><span class="label">Traza adjunta:</span> {{ nc.traza_producto_nombre }}</div>
-        {% endif %}
-    </div>
-    {% endif %}
+  <div class="section-box">
+    <div class="section-title">VERIFICACIÓN POSIBLES EFECTOS SOBRE</div>
 
-    {% if nc.afecta_proceso %}
-    <div class="section">
-        <h2>Afectación al Proceso</h2>
-        <div class="field"><span class="label">¿Afecta al proceso?:</span> Sí</div>
-        {% if nc.resuelto_proceso %}
-            <div class="field"><span class="label">¿Resuelto?:</span> {{ nc.resuelto_proceso }}</div>
-        {% endif %}
-        {% if nc.acciones_proceso %}
-            <div class="field"><span class="label">Acciones tomadas:</span> {{ nc.acciones_proceso }}</div>
-        {% endif %}
-    </div>
-    {% endif %}
+    <table class="verificacion-table">
+      <tr>
+        <th colspan="3" class="verificacion-header">PROCESO</th>
+        <th colspan="3" class="verificacion-header">PRODUCTO</th>
+      </tr>
+      <tr>
+        <td class="bold">Verificaciones posibles efectos</td>
+        <td class="bold">OK</td>
+        <td class="bold">NC</td>
+        <td class="bold">Verific./Controles posteriores</td>
+        <td class="bold">OK</td>
+        <td class="bold">NC</td>
+      </tr>
+      <tr>
+        <td>{{ nc.verificacion_proceso or '---' }}</td>
+        <td>{% if nc.verificacion_ok_proceso %}X{% endif %}</td>
+        <td>{% if nc.verificacion_nc_proceso %}X{% endif %}</td>
+        <td>{{ nc.verificacion_producto or '---' }}</td>
+        <td>{% if nc.verificacion_ok_producto %}X{% endif %}</td>
+        <td>{% if nc.verificacion_nc_producto %}X{% endif %}</td>
+      </tr>
+      <tr>
+        <td colspan="3"><strong>OBSERVACIONES</strong><br>{{ nc.observaciones_proceso or '' }}</td>
+        <td colspan="3"><strong>OBSERVACIONES</strong><br>{{ nc.observaciones_producto or '' }}</td>
+      </tr>
+    </table>
+  </div>
 
-    <div class="section">
-        <h2>Validación</h2>
-        {% if nc.nc_validada %}
-            <div class="field"><span class="label">Validación:</span> {{ nc.nc_validada }}</div>
-        {% endif %}
-        {% if nc.comentarios_validacion %}
-            <div class="field"><span class="label">Comentarios:</span> {{ nc.comentarios_validacion }}</div>
-        {% endif %}
-        {% if nc.fecha_acciones %}
-            <div class="field"><span class="label">Fecha acciones:</span> {{ nc.fecha_acciones }}</div>
-        {% endif %}
-        {% if nc.producto_nc %}
-            <div class="field"><span class="label">¿Producto NC?:</span> Sí</div>
-        {% endif %}
-        {% if nc.acciones_producto_nc %}
-            <div class="field"><span class="label">Acciones sobre producto NC:</span> {{ nc.acciones_producto_nc }}</div>
-        {% endif %}
-    </div>
+  <div class="footer-box">
+    <p><strong>Caso producto No Conforme, alertado cliente del proceso concernido</strong></p>
+    <p><strong>Acciones sobre el producto:</strong> {{ nc.acciones_producto_nc or '' }} <span style="float: right;"><strong>Fecha:</strong> {{ nc.fecha_acciones or '' }}</span></p>
+  </div>
+
+  <div class="firma-line">
+    Firmado: Función métodos de medida y ensayo: <u>P.O. Koldo Alonso Elorza</u>   Téc. de Garantía Materia: <u>L.A Gastón</u>
+  </div>
+
 </body>
 </html>

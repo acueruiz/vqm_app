@@ -51,7 +51,7 @@ with st.sidebar.expander("⚙️ Administración", expanded=False):
     st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
 
 # dashboard
-st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
+st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
 
 # estilos CSS personalizados
 st.markdown(
