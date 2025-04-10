@@ -3,7 +3,7 @@ import requests
 import os
 import time
 
-API_URL = "https://vqm-api.onrender.com/vqm"
+API_URL = "https://vqm-app.onrender.com/vqm"
 
 st.set_page_config(page_title="Gestión de usuarios", page_icon="👥", layout="wide")
 
