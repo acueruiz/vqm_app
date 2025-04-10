@@ -7,11 +7,11 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: DATABASE_USER
-        value: postgres
+        value: admin_vqm
       - key: DATABASE_PASSWORD
-        value: Aldama2122
+        value: BzG45n71A3ZHl06j7vzzs5Ws2odyW3Ad
       - key: DATABASE_HOST
-        value: tu_host_render
+        value: dpg-cvrnntogjchc73be7fd0-a
       - key: DATABASE_PORT
         value: 5432
       - key: DATABASE_NAME
