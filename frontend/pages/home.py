@@ -58,110 +58,80 @@ with st.sidebar.expander("⚙️ Administración", expanded=False):
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
 
 # estilos CSS personalizados
-st.markdown("""
+st.markdown(
+    """
     <style>
-        /* Global app style */
-        html, body, [data-testid="stApp"] {
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            background-color: #0f1117;
-            color: #f5f5f5;
-        }
 
-        /* Sidebar */
-        [data-testid="stSidebar"] {
-            background-color: #14161c;
-            padding-top: 10px;
-        }
-
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-            color: #ffffff;
-        }
-
+        /* Oculta el menú de navegación automático de Streamlit */
         [data-testid="stSidebarNav"] {
             display: none !important;
         }
 
-        [data-testid="stImage"] img {
-            margin-top: -20px;
-            margin-bottom: -15px;
+        [data-testid="stSidebar"] {
+            padding-top: 0px !important; /* Reduce el padding superior del sidebar */
         }
-
-        /* Header corporativo */
+        
+        [data-testid="stImage"] img {
+            margin-top: -30px !important; /* Reduce el espacio superior del logo */
+            margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
+        }
+    
+        /* Encabezados mejorados */
         .header {
             text-align: center;
             background-color: #0055A4;
-            padding: 20px 40px;
+            padding: 15px;
             color: white;
-            font-size: 28px;
-            font-weight: 700;
-            border-radius: 16px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        /* Section separator */
-        .separator {
-            border-bottom: 2px solid #0055A4;
-            margin: 40px 0;
-        }
-
-        /* Custom buttons */
+        /* Botones personalizados */
         .stButton > button {
             background-color: #0055A4;
             color: white;
-            font-weight: 600;
-            padding: 10px 24px;
-            border-radius: 10px;
+            font-size: 16px;
+            padding: 10px 15px;
+            border-radius: 8px;
             border: none;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: 0.3s;
         }
 
         .stButton > button:hover {
-            background-color: #003c7e;
-            transform: scale(1.03);
+            background-color: #003C7E;
+            transform: scale(1.05);
         }
 
-        /* Custom metric text */
-        [data-testid="stMetricValue"] {
-            font-size: 26px;
-            font-weight: bold;
-            color: #00C49F;
+        /* Separadores visuales */
+        .separator {
+            border-bottom: 3px solid #0055A4;
+            margin: 30px 0;
         }
 
-        [data-testid="stMetricLabel"] {
-            font-size: 16px;
-            color: #cccccc;
-        }
-
-        /* Dataframe table */
+        /* Mejora en la tabla de datos */
         .dataframe {
             border-collapse: collapse;
             width: 100%;
-            background-color: #ffffff;
+            background-color: white;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            overflow: hidden;
+        }
+
+        .dataframe th, .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
         }
 
         .dataframe th {
             background-color: #0055A4;
             color: white;
             text-align: left;
-            padding: 10px;
-        }
-
-        .dataframe td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            color: #333333;
-        }
-
-        /* Spinner overlay */
-        .stSpinner {
-            color: #0055A4 !important;
         }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 # encabezado principal
 st.markdown('<div class="header"><h1>Análisis de VQMs</h1></div>', unsafe_allow_html=True)
