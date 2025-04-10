@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: vqm-api
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DATABASE_USER
+        value: postgres
+      - key: DATABASE_PASSWORD
+        value: Aldama2122
+      - key: DATABASE_HOST
+        value: tu_host_render
+      - key: DATABASE_PORT
+        value: 5432
+      - key: DATABASE_NAME
+        value: vqm_db
+      - key: SECRET_KEY
+        value: c837a9c0a6767aff0ed01ef3f0cbd60c
