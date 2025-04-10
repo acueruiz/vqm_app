@@ -3,8 +3,7 @@ import requests
 import pandas as pd
 import os
 
-# configuración de la API Flask
-API_URL = "http://127.0.0.1:5000/vqm"
+API_URL = "https://vqm-api.onrender.com/vqm"
 
 # configuración de la página
 st.set_page_config(page_title="VQM MDM - Introducción de Datos", layout="wide", page_icon="📝")

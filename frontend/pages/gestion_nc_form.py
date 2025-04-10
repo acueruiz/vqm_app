@@ -6,8 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 import time
 from weasyprint import HTML
 
-# Configuración de la API Flask
-API_URL = "http://127.0.0.1:5000/vqm"
+API_URL = "https://vqm-api.onrender.com/vqm"
 
 # Configuración de la página
 st.set_page_config(page_title="Gestión de No Conformidades", layout="wide", page_icon="⚠️")
