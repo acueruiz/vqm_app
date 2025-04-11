@@ -3,7 +3,7 @@ import requests
 import os
 import time
 
-API_URL = "https://vqm-app.onrender.com/vqm"
+API_URL = "https://vqm-app.onrender.com/"
 
 st.set_page_config(page_title="Gestión de usuarios", page_icon="👥", layout="wide")
 
@@ -30,7 +30,7 @@ with st.sidebar.expander("📝 Formularios", expanded=False):
 
 # visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
+    st.page_link("pages/view_data.py", label="Ver Datos MDM")
     st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
     st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 

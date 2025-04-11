@@ -7,10 +7,10 @@ API_URL = "https://vqm-app.onrender.com/vqm"
 
 st.set_page_config(page_title="Modificar Datos MDM", layout="wide", page_icon="🛠")
 
-# Obtener ruta absoluta de la imagen
+# obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
 
-# Verificar si la imagen existe
+# verificar si la imagen existe
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path, use_container_width=True)
 else:
@@ -24,25 +24,25 @@ st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):
-    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
-    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
-    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
 # visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
-    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
+    st.page_link("pages/view_data.py", label="Ver Datos MDM")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 
 # modificación de datos
 with st.sidebar.expander("🛠 Modificación de Datos", expanded=False):
-    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
-    st.page_link("pages/edit_vqm_temp.py", label="Modificar VQM Temp", icon="🌡️")
+    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM")
+    st.page_link("pages/edit_vqm_temp.py", label="Modificar VQM Temp")
 
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
-    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
+    st.page_link("pages/users.py", label="Gestión de usuarios")
+    st.page_link("pages/correos.py", label="Gestión de correos")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📊")
