@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import os
 
-API_URL = os.getenv("API_URL", "https://vqm-app.onrender.com")
+API_URL = "https://vqm-app.onrender.com"
 
 # configuración de la página
 st.set_page_config(page_title="VQM MDM - Introducción de Datos", layout="wide", page_icon="📝")

@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 import time
 from weasyprint import HTML
 
-API_URL = os.getenv("API_URL", "https://vqm-app.onrender.com")
+API_URL = "https://vqm-app.onrender.com"
 
 # Configuración de la página
 st.set_page_config(page_title="Gestión de No Conformidades", layout="wide", page_icon="⚠️")

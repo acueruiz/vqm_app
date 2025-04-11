@@ -5,7 +5,7 @@ import pandas as pd
 import time
 import plotly.express as px
 
-API_URL = os.getenv("API_URL", "https://vqm-app.onrender.com")
+API_URL = "https://vqm-app.onrender.com/vqm"
 
 # Verificar autenticación antes de mostrar la página
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:

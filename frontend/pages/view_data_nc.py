@@ -3,7 +3,8 @@ import requests
 import pandas as pd
 import os
 
-API_URL = os.getenv("API_URL", "https://vqm-app.onrender.com")
+API_URL = "https://vqm-app.onrender.com"
+
 
 # Configuración de la página
 st.set_page_config(page_title="Gestión de NC - Datos", layout="wide", page_icon="📋")
