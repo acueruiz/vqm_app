@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import os
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:5000/")
+API_URL = os.getenv("https://vqm-api.onrender.com/")
 
 # Configuración de la página
 st.set_page_config(page_title="VQM Temperatura MI10 - Datos", layout="wide", page_icon="📋")
