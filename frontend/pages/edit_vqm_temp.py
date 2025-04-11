@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import os
 
-API_URL = "https://vqm-app.onrender.com"
+API_URL = "https://vqm-app.onrender.com/vqm"
 
 st.set_page_config(page_title="Modificar VQM Temperatura", layout="wide", page_icon="🛠")
 

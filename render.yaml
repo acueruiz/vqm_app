@@ -26,4 +26,4 @@ services:
     startCommand: streamlit run frontend/login.py --server.port $PORT
     envVars:
       - key: API_URL
-        value: https://vqm-api.onrender.com/
+        value: https://vqm-app.onrender.com/
