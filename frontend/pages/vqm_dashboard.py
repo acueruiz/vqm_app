@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import base64
 
-API_URL = os.getenv("https://vqm-api.onrender.com/")
+API_URL = os.getenv("API_URL", "https://vqm-app.onrender.com")
 
 st.set_page_config(page_title="Dashboards", page_icon="📉", layout="wide")
 
