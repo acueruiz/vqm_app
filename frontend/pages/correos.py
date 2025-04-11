@@ -3,7 +3,7 @@ import requests
 import os
 import time
 
-API_URL = "https://vqm-app.onrender.com/vqm"
+API_URL = os.getenv("API_URL", "http://127.0.0.1:5000/")
 
 st.set_page_config(page_title="Gestión de correos", page_icon="📧", layout="wide")
 

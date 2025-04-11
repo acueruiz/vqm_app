@@ -18,3 +18,12 @@ services:
         value: vqm_db
       - key: SECRET_KEY
         value: c837a9c0a6767aff0ed01ef3f0cbd60c
+
+  - type: web
+    name: vqm-streamlit
+    env: python
+    buildCommand: ""
+    startCommand: streamlit run frontend/login.py --server.port $PORT
+    envVars:
+      - key: API_URL
+        value: https://vqm-api.onrender.com/
