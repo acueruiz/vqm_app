@@ -58,14 +58,12 @@ class CorreoUsuario(BaseModel):
             "activo": self.activo
         }
 
-# modelo de Permisos de Usuarios
+# modelo para los permisos por departamento
 class PermisoUsuario(BaseModel):
     __tablename__ = "permisos_usuarios"
 
     usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"))
-    grupo = Column(String, nullable=False)
-    permiso_edicion = Column(Boolean, default=False)
-    permiso_desbloqueo = Column(Boolean, default=False)
+    departamento = Column(String, nullable=False)  # Ej: 'OBTENCION', 'MEDIDA', 'ADMIN'
 
     usuario = relationship("Usuario", back_populates="permisos")
 
@@ -109,7 +107,7 @@ class TratamientoNCVqm(BaseModel):
     # nuevos campos
     resuelto_producto = Column(Boolean)
     acciones_producto = Column(Text)
-    traza_producto_nombre = Column(String)  # solo el nombre/ruta del archivo
+    traza_producto_nombre = Column(String)
     afecta_producto = Column(Boolean)
 
     resuelto_proceso = Column(Boolean)

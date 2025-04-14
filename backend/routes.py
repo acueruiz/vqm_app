@@ -48,11 +48,25 @@ def login():
     if user and bcrypt.check_password_hash(user.password, password):
         login_user(user)
         print("Inicio de sesión exitoso")
+
+        # Obtener los permisos relacionados
+        permisos = [
+            {
+                "grupo": permiso.grupo,
+                "permiso_edicion": permiso.permiso_edicion,
+                "permiso_desbloqueo": permiso.permiso_desbloqueo
+            }
+            for permiso in user.permisos
+        ]
+
         return jsonify({
             "message": "Inicio de sesión exitoso",
             "email": user.email,
-            "nombre": user.nombre
-        }), 200  # <--- Aquí devuelves más datos
+            "nombre": user.nombre,
+            "id": user.id,
+            "admin": user.admin,
+            "permisos": permisos
+        }), 200
 
     print("Credenciales incorrectas")
     return jsonify({"error": "Credenciales incorrectas"}), 401

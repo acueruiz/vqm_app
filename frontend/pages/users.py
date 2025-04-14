@@ -43,6 +43,7 @@ with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
 with st.sidebar.expander("⚙️ Administración", expanded=False):
     st.page_link("pages/users.py", label="Gestión de usuarios")
     st.page_link("pages/correos.py", label="Gestión de correos")
+    st.page_link("pages/permisos.py", label="Gestión de permisos")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
@@ -131,7 +132,7 @@ usuarios = response.json() if response.status_code == 200 else []
 
 # añadir usuario
 st.markdown("<h3 style='color: #0055A4;'>Añadir usuario</h3>", unsafe_allow_html=True)
-with st.expander("Expande para añadir un nuevo usuario", expanded=False):
+with st.expander("Expande para añadir un nuevo usuario", expanded=True):
     email = st.text_input("Correo electrónico")
     nombre = st.text_input("Nombre completo")
     password = st.text_input("Contraseña", type="password")
@@ -151,7 +152,7 @@ with st.expander("Expande para añadir un nuevo usuario", expanded=False):
                 time.sleep(1.5)
                 st.rerun()
             elif response.status_code == 400:
-                st.error("❌ El usuario ya existe.")
+                st.error("El usuario ya existe.")
             else:
                 st.error("⚠️ Error al registrar el usuario.")
         else:
@@ -170,7 +171,7 @@ with st.expander("Expande para modificar un usuario existente", expanded=False):
         if st.button("💾 Guardar cambios"):
             data = {"nombre": nuevo_nombre, "admin": nuevo_admin}
             if nueva_password:
-                data["password"] = nueva_password  # Solo cambia la contraseña si se proporciona
+                data["password"] = nueva_password  # solo cambia la contraseña si se mete una nueva, es opcional
 
             response = requests.put(f"{API_URL}/vqm/usuarios/{selected_user}", json=data)
 

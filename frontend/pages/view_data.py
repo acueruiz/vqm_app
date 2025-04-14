@@ -28,25 +28,26 @@ st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # formularios
 with st.sidebar.expander("📝 Formularios", expanded=False):
-    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form", icon="📝")
-    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form", icon="🌡️")
-    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form", icon="⚠️")
+    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
+    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
+    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
 # visualización de Datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
-    st.page_link("pages/view_data.py", label="Ver Datos MDM", icon="📋")
-    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI", icon="🌡️")
-    st.page_link("pages/view_data_nc.py", label="Ver Datos NC", icon="⚠️")
+    st.page_link("pages/view_data.py", label="Ver Datos MDM")
+    st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
+    st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 
 # modificación de datos
 with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
-    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM", icon="⚙️")
-    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp", icon="🌡️")
+    st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM")
+    st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp")
     
 # administración
 with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Gestión de usuarios", icon="👥")
-    st.page_link("pages/correos.py", label="Gestión de correos", icon="📨")
+    st.page_link("pages/users.py", label="Gestión de usuarios")
+    st.page_link("pages/correos.py", label="Gestión de correos")
+    st.page_link("pages/permisos.py", label="Gestión de permisos")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
