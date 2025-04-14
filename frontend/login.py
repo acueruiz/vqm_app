@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import os
 
-API_URL = "https://vqm-app.onrender.com"
+API_URL = "https://127.0.0.1:5000"
 
 st.set_page_config(page_title="VQM - Iniciar Sesión", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
