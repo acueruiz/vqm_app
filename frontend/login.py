@@ -33,12 +33,20 @@ if st.button("Iniciar sesión"):
     if response.status_code == 200:
         data = response.json()
         st.session_state["authenticated"] = True
-        st.session_state["user_email"] = data["email"]
-        st.session_state["user_name"] = data["nombre"]
+
+        # guardamos toda la información del usuario como espera home.py
+        st.session_state["usuario"] = {
+            "email": data["email"],
+            "nombre": data["nombre"],
+            "admin": data["admin"],
+            "permisos": data["permisos"]
+        }
+
         st.success("✅ Inicio de sesión exitoso. Redirigiendo...")
         st.rerun()  # recarga la página
     else:
         st.error("❌ Credenciales incorrectas. Inténtalo de nuevo.")
 
+# si ya está autenticado, redirigir
 if st.session_state["authenticated"]:
     st.switch_page("pages/home.py")

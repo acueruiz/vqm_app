@@ -4,8 +4,12 @@ import requests
 import pandas as pd
 import time
 import plotly.express as px
+from permisos_usuarios import tiene_departamento
 
 API_URL = "http://127.0.0.1:5000/vqm"
+
+# configuración de la página
+st.set_page_config(page_title="Aplicación VQM", layout="wide", page_icon="🏠")
 
 # Verificar autenticación antes de mostrar la página
 if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
@@ -13,8 +17,16 @@ if "authenticated" not in st.session_state or not st.session_state["authenticate
     st.markdown('<meta http-equiv="refresh" content="0; URL=login.py">', unsafe_allow_html=True)
     st.stop()
 
-# configuración de la página
-st.set_page_config(page_title="Aplicación VQM", layout="wide", page_icon="🏠")
+# Inicializar claves necesarias ANTES DE USARLAS
+st.session_state.setdefault("usuario", {
+    "email": "sin_email",
+    "nombre": "Usuario no identificado",
+    "admin": False,
+    "permisos": []
+})
+
+# AHORA ya puedes hacer:
+st.sidebar.info(f"👤 Usuario: {st.session_state['usuario']['email']}")
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -33,9 +45,14 @@ st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
 
 # introducción de datos
 with st.sidebar.expander("📝 Formularios", expanded=False):
-    st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
-    st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
-    st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
+    if tiene_departamento("MEDIDA") or tiene_departamento("OBTENCIÓN"):
+        st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
+
+    if tiene_departamento("OBTENCIÓN"):
+        st.page_link("pages/vqm_temp_form.py", label="VQM Temperatura Form")
+
+    if tiene_departamento("GARANTÍA"):
+        st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
 # visualización de datos
 with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
@@ -49,10 +66,11 @@ with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
     st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp")
 
 # administración
-with st.sidebar.expander("⚙️ Administración", expanded=False):
-    st.page_link("pages/users.py", label="Gestión de usuarios")
-    st.page_link("pages/correos.py", label="Gestión de correos")
-    st.page_link("pages/permisos.py", label="Gestión de permisos")
+if st.session_state["usuario"]["admin"]:
+    with st.sidebar.expander("⚙️ Administración", expanded=False):
+        st.page_link("pages/users.py", label="Gestión de usuarios")
+        st.page_link("pages/correos.py", label="Gestión de correos")
+        st.page_link("pages/permisos.py", label="Gestión de permisos")
 
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")

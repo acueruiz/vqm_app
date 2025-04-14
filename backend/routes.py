@@ -50,14 +50,7 @@ def login():
         print("Inicio de sesión exitoso")
 
         # Obtener los permisos relacionados
-        permisos = [
-            {
-                "grupo": permiso.grupo,
-                "permiso_edicion": permiso.permiso_edicion,
-                "permiso_desbloqueo": permiso.permiso_desbloqueo
-            }
-            for permiso in user.permisos
-        ]
+        permisos = [permiso.departamento for permiso in user.permisos]
 
         return jsonify({
             "message": "Inicio de sesión exitoso",
