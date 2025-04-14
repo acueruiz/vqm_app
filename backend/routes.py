@@ -64,11 +64,10 @@ def login():
     print("Credenciales incorrectas")
     return jsonify({"error": "Credenciales incorrectas"}), 401
 
-@api_blueprint.route('/logout') # por implementar!!! <-----------------------------------------------------
-@login_required
+@api_blueprint.route('/logout', methods=['POST'])
 def logout():
     logout_user()
-    return redirect(url_for('vqm.login'))
+    return jsonify({"message": "Sesión cerrada exitosamente"}), 200
 
 @api_blueprint.route('/protected', methods=['GET'])
 @login_required

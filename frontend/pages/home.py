@@ -72,6 +72,22 @@ if st.session_state["usuario"]["admin"]:
         st.page_link("pages/correos.py", label="Gestión de correos")
         st.page_link("pages/permisos.py", label="Gestión de permisos")
 
+# botón de logout
+if st.sidebar.button("🚪 Cerrar sesión"):
+    try:
+        # peticion al backend (opcional si no hay sesión real)
+        requests.post("http://127.0.0.1:5000/logout")
+    except Exception as e:
+        print("Error al cerrar sesión:", e)
+
+    # limpiar variables de sesión
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+
+    st.success("🔒 Sesión cerrada. Redirigiendo...")
+    time.sleep(1.5)
+    st.switch_page("login.py")
+
 # dashboard
 st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
 
