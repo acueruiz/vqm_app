@@ -39,7 +39,7 @@ def get_vqm_mdm_no_conformes():
 def get_vqm_temp_no_conformes():
     response = requests.get(f"{API_URL}/vqm_temperatura")
     if response.status_code == 200:
-        return [item for item in response.json() if not item.get("vqm_temperatura_conforme")]
+        return [item for item in response.json() if not item.get("vqm_conforme")]
     return []
 
 # ---------------- Selección de tipo de NC ---------------- #
@@ -59,11 +59,11 @@ if tipo_nc == "NC en MDM":
     opciones = [f"{item['titulo']} - Operador: {item['operador']}" for item in vqms_mdm]
     seleccion = st.selectbox("Selecciona una VQM MDM no conforme:", opciones)
     vqm_seleccionada = vqms_mdm[opciones.index(seleccion)]
-    instrumento = vqm_seleccionada["id_dosificador"]
+    instrumento = vqm_seleccionada["titulo"]
 
 elif tipo_nc == "NC en Temperatura MI":
     vqms_temp = get_vqm_temp_no_conformes()
-    opciones = [f"{item['maquina']} - {item['fecha']}" for item in vqms_temp]
+    opciones = [f"{item['maquina']} - {item['trimestre_anio']}" for item in vqms_temp]
     seleccion = st.selectbox("Selecciona una VQM Temperatura no conforme:", opciones)
     vqm_seleccionada = vqms_temp[opciones.index(seleccion)]
     maquina = vqm_seleccionada["maquina"]
@@ -78,14 +78,12 @@ if vqm_seleccionada:
 
     with col1:
         titulo = st.text_input("Título")
-        st.text_input("Máquina", value=maquina or "No aplica", disabled=True)
 
     with col2:
         fecha = st.date_input("Fecha", value=datetime.date.today())
         operador = st.text_input("Operario", value=st.session_state.get("user_name", ""), disabled=True)
 
     with col3:
-        st.text_input("Instrumento de medida", value=instrumento or "No aplica", disabled=True)
         trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
 
     # Luego todo tu código actual del formulario...
