@@ -25,7 +25,7 @@ st.session_state.setdefault("usuario", {
 st.sidebar.markdown(
     f"""
     <div style='margin-top: -20px; padding-bottom: 5px; font-size: 11px; text-align: center; color: #bbb;'>
-        Usuario: <span style='color: white;'>{st.session_state['usuario']['email']}</span>
+        Usuario: <span style='color: white;'>{st.session_state['usuario']['nombre']}</span>
     </div>
     """,
     unsafe_allow_html=True
