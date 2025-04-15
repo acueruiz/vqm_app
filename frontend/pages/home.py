@@ -4,7 +4,6 @@ import requests
 import pandas as pd
 import time
 import plotly.express as px
-from permisos_usuarios import tiene_departamento
 from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
@@ -28,7 +27,7 @@ st.markdown('<div class="header"><h2>Análisis de VQMs</h1></div>', unsafe_allow
 
 # cargar datos desde la API
 with st.spinner("Cargando datos de VQM MDM..."):
-    time.sleep(1)  # simulación de carga
+    time.sleep(1)
     
     # datos de VQM MDM
     response_vqm = requests.get(f"{API_URL}/vqm_mdm")

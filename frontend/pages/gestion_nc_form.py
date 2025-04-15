@@ -26,6 +26,75 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
+# ... (importaciones y configuración igual que antes)
+
+@st.cache_data
+def get_vqm_mdm_no_conformes():
+    response = requests.get(f"{API_URL}/vqm_mdm")
+    if response.status_code == 200:
+        return [item for item in response.json() if not item.get("vqm_masico_conforme")]
+    return []
+
+@st.cache_data
+def get_vqm_temp_no_conformes():
+    response = requests.get(f"{API_URL}/vqm_temperatura")
+    if response.status_code == 200:
+        return [item for item in response.json() if not item.get("vqm_temperatura_conforme")]
+    return []
+
+# ---------------- Selección de tipo de NC ---------------- #
+st.markdown("### Selección del tipo de NC")
+tipo_nc = st.radio("Selecciona el tipo de NC a tratar:", ["", "NC en MDM", "NC en Temperatura MI"], horizontal=True)
+
+if tipo_nc == "":
+    st.info("Selecciona primero el tipo de No Conformidad.")
+    st.stop()
+
+vqm_seleccionada = None
+maquina = None
+instrumento = None
+
+if tipo_nc == "NC en MDM":
+    vqms_mdm = get_vqm_mdm_no_conformes()
+    opciones = [f"{item['titulo']} - Operador: {item['operador']}" for item in vqms_mdm]
+    seleccion = st.selectbox("Selecciona una VQM MDM no conforme:", opciones)
+    vqm_seleccionada = vqms_mdm[opciones.index(seleccion)]
+    instrumento = vqm_seleccionada["id_dosificador"]
+
+elif tipo_nc == "NC en Temperatura MI":
+    vqms_temp = get_vqm_temp_no_conformes()
+    opciones = [f"{item['maquina']} - {item['fecha']}" for item in vqms_temp]
+    seleccion = st.selectbox("Selecciona una VQM Temperatura no conforme:", opciones)
+    vqm_seleccionada = vqms_temp[opciones.index(seleccion)]
+    maquina = vqm_seleccionada["maquina"]
+
+# Si ya se seleccionó una VQM, mostrar el formulario completo
+if vqm_seleccionada:
+    # ---------------- Sección 1: Datos generales ---------------- #
+    st.markdown("### 1. Datos generales")
+    st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        titulo = st.text_input("Título")
+        st.text_input("Máquina", value=maquina or "No aplica", disabled=True)
+
+    with col2:
+        fecha = st.date_input("Fecha", value=datetime.date.today())
+        operador = st.text_input("Operario", value=st.session_state.get("user_name", ""), disabled=True)
+
+    with col3:
+        st.text_input("Instrumento de medida", value=instrumento or "No aplica", disabled=True)
+        trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
+
+    # Luego todo tu código actual del formulario...
+    # Secciones 2 a 5 + enviar_datos() + boton "Guardar"
+    # (puedes copiarlo tal cual debajo de este bloque condicional)
+
+# Fin del bloque
+
+
 @st.cache_data
 def get_maquinas():
     response = requests.get(f"{API_URL}/vqm_temperatura")

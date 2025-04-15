@@ -6,6 +6,8 @@ API_URL = "http://127.0.0.1:5000"
 
 st.set_page_config(page_title="VQM - Iniciar Sesión", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
+_ = st.empty()
+
 st.markdown(
     """
     <style>
