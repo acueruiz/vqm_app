@@ -25,8 +25,14 @@ st.session_state.setdefault("usuario", {
     "permisos": []
 })
 
-# AHORA ya puedes hacer:
-st.sidebar.info(f"👤 Usuario: {st.session_state['usuario']['email']}")
+st.sidebar.markdown(
+    f"""
+    <div style='margin-top: -20px; padding-bottom: 5px; font-size: 11px; text-align: center; color: #bbb;'>
+        Usuario: <span style='color: white;'>{st.session_state['usuario']['nombre']}</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Obtener ruta absoluta de la imagen
 logo_path = os.path.join(os.getcwd(), "frontend", "imagenes", "logo_michelin.png")
@@ -72,15 +78,18 @@ if st.session_state["usuario"]["admin"]:
         st.page_link("pages/correos.py", label="Gestión de correos")
         st.page_link("pages/permisos.py", label="Gestión de permisos")
 
+# dashboard
+st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
+
+st.sidebar.markdown('<hr style="margin-top: 30px; margin-bottom: 15px; border: none; border-top: 2px solid #666;">', unsafe_allow_html=True)
+
 # botón de logout
-if st.sidebar.button("🚪 Cerrar sesión"):
+if st.sidebar.button("Cerrar sesión", key="logout"):
     try:
-        # peticion al backend (opcional si no hay sesión real)
         requests.post("http://127.0.0.1:5000/logout")
     except Exception as e:
         print("Error al cerrar sesión:", e)
 
-    # limpiar variables de sesión
     for key in list(st.session_state.keys()):
         del st.session_state[key]
 
@@ -88,13 +97,29 @@ if st.sidebar.button("🚪 Cerrar sesión"):
     time.sleep(1.5)
     st.switch_page("login.py")
 
-# dashboard
-st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
-
 # estilos CSS personalizados
 st.markdown(
     """
     <style>
+
+        /* Estilo más pequeño y elegante para el usuario */
+        .st-emotion-cache-1c7y2kd {
+            font-size: 13px !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Estilo del botón de cerrar sesión */
+        .stButton > button[kind="secondary"] {
+            background-color: #333 !important;
+            color: white !important;
+            width: 100%;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .stButton > button[kind="secondary"]:hover {
+            background-color: #555 !important;
+        }
 
         /* Oculta el menú de navegación automático de Streamlit */
         [data-testid="stSidebarNav"] {
@@ -102,9 +127,9 @@ st.markdown(
         }
 
         [data-testid="stSidebar"] {
-            padding-top: 0px !important; /* Reduce el padding superior del sidebar */
+            padding-top: -30px !important;
         }
-        
+
         [data-testid="stImage"] img {
             margin-top: -30px !important; /* Reduce el espacio superior del logo */
             margin-bottom: -20px !important; /* Reduce el espacio inferior del logo */
