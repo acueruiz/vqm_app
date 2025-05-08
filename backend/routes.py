@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, session, redirect, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10
+from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TipoNotificacion, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10
+from sqlalchemy.orm import joinedload
 
 bcrypt = Bcrypt()
 
@@ -213,11 +214,10 @@ def delete_record(modelo, id):
         return jsonify({"message": f"Registro {id} eliminado de {modelo}"}), 200
     return jsonify({"error": "Modelo no encontrado"}), 404
 
-# rutas para gestión de correos por departamento
-
 @api_blueprint.route('/correos/departamento/<string:departamento>', methods=['GET'])
 def get_correos_por_departamento(departamento):
-    correos = CorreoUsuario.query.filter_by(departamento=departamento).all()
+    correos = CorreoUsuario.query.options(joinedload(CorreoUsuario.tipos))\
+        .filter_by(departamento=departamento).all()
     return jsonify([c.to_dict() for c in correos]), 200
 
 @api_blueprint.route('/correos', methods=['POST'])
@@ -227,7 +227,6 @@ def add_correo():
         email=data["email"],
         nombre=data.get("nombre", ""),
         departamento=data["departamento"],
-        tipo_notificacion=data.get("tipo_notificacion", "vqm_nc"),
         activo=data.get("activo", True)
     )
     db.session.add(nuevo)
@@ -242,3 +241,39 @@ def delete_correo(id):
     db.session.delete(correo)
     db.session.commit()
     return jsonify({"message": "Correo eliminado"}), 200
+
+@api_blueprint.route('/correos/<int:correo_id>/notificaciones', methods=['PUT'])
+def actualizar_notificaciones(correo_id):
+    data = request.get_json()
+    tipos = data.get("tipos", [])
+
+    correo = CorreoUsuario.query.get(correo_id)
+    if not correo:
+        return jsonify({"error": "Correo no encontrado"}), 404
+
+    correo.tipos.clear()
+
+    for nombre in tipos:
+        tipo = db.session.query(TipoNotificacion).filter_by(nombre=nombre).first()
+        if tipo:
+            correo.tipos.append(tipo)
+
+    db.session.commit()
+    return jsonify({"message": "Tipos actualizados correctamente"})
+
+@api_blueprint.route('/tipos_notificacion', methods=['GET'])
+def obtener_tipos_notificacion():
+    tipos = TipoNotificacion.query.all()
+    return jsonify([{
+        "id": t.id,
+        "nombre": t.nombre,
+        "descripcion": t.descripcion
+    } for t in tipos]), 200
+
+@api_blueprint.route('/vqm/correos_usuarios', methods=['GET'])
+def get_all_correos():
+    correos = CorreoUsuario.query.options(joinedload(CorreoUsuario.tipos)).all()
+    return jsonify([c.to_dict() for c in correos]), 200
+
+
+

@@ -8,6 +8,12 @@ import time
 from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from utils.email_sender import enviar_email
 
 API_URL = "http://127.0.0.1:5000/vqm"
 
@@ -26,8 +32,6 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
-# ... (importaciones y configuración igual que antes)
-
 @st.cache_data
 def get_vqm_mdm_no_conformes():
     response = requests.get(f"{API_URL}/vqm_mdm")
@@ -37,16 +41,21 @@ def get_vqm_mdm_no_conformes():
 
 @st.cache_data
 def get_vqm_temp_no_conformes():
-    response = requests.get(f"{API_URL}/vqm_temperatura")
+    response = requests.get(f"{API_URL}/vqm_temperatura_mi10")
     if response.status_code == 200:
         return [item for item in response.json() if not item.get("vqm_conforme")]
     return []
 
 # ---------------- Selección de tipo de NC ---------------- #
 st.markdown("### Selección del tipo de NC")
-tipo_nc = st.radio("Selecciona el tipo de NC a tratar:", ["", "NC en MDM", "NC en Temperatura MI"], horizontal=True)
+tipo_nc = st.radio(
+    "Selecciona el tipo de NC a tratar:",
+    ["NC en MDM", "NC en Temperatura MI"],
+    horizontal=True,
+    index=None  # <- Esto evita que haya una opción preseleccionada
+)
 
-if tipo_nc == "":
+if tipo_nc is None:
     st.info("Selecciona primero el tipo de No Conformidad.")
     st.stop()
 
@@ -56,19 +65,19 @@ instrumento = None
 
 if tipo_nc == "NC en MDM":
     vqms_mdm = get_vqm_mdm_no_conformes()
-    opciones = [f"{item['titulo']} - Operador: {item['operador']}" for item in vqms_mdm]
+    opciones = [f"{item['titulo']}  -  {item['operador']}  -  {item['fecha']}" for item in vqms_mdm]
     seleccion = st.selectbox("Selecciona una VQM MDM no conforme:", opciones)
     vqm_seleccionada = vqms_mdm[opciones.index(seleccion)]
     instrumento = vqm_seleccionada["titulo"]
 
 elif tipo_nc == "NC en Temperatura MI":
     vqms_temp = get_vqm_temp_no_conformes()
-    opciones = [f"{item['maquina']} - {item['trimestre_anio']}" for item in vqms_temp]
+    opciones = [f"{item['titulo']} - {item['trimestre_anio']}" for item in vqms_temp]
     seleccion = st.selectbox("Selecciona una VQM Temperatura no conforme:", opciones)
     vqm_seleccionada = vqms_temp[opciones.index(seleccion)]
-    maquina = vqm_seleccionada["maquina"]
+    maquina = vqm_seleccionada["titulo"]
 
-# Si ya se seleccionó una VQM, mostrar el formulario completo
+# si ya se seleccionó una VQM, mostrar el formulario completo
 if vqm_seleccionada:
     # ---------------- Sección 1: Datos generales ---------------- #
     st.markdown("### 1. Datos generales")
@@ -77,11 +86,20 @@ if vqm_seleccionada:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        titulo = st.text_input("Título")
+        # Construcción automática del título
+        if tipo_nc == "NC en MDM":
+            titulo_predefinido = f"VQM NC del {instrumento}"
+        elif tipo_nc == "NC en Temperatura MI":
+            titulo_predefinido = f"VQM NC de Temperatura MI - {maquina}"
+        else:
+            titulo_predefinido = ""
+
+        # Campo de título editable, pero pre-rellenado
+        titulo = st.text_input("Título", value=titulo_predefinido)
 
     with col2:
         fecha = st.date_input("Fecha", value=datetime.date.today())
-        operador = st.text_input("Operario", value=st.session_state.get("user_name", ""), disabled=True)
+        operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
 
     with col3:
         trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
@@ -89,9 +107,6 @@ if vqm_seleccionada:
     # Luego todo tu código actual del formulario...
     # Secciones 2 a 5 + enviar_datos() + boton "Guardar"
     # (puedes copiarlo tal cual debajo de este bloque condicional)
-
-# Fin del bloque
-
 
 @st.cache_data
 def get_maquinas():
@@ -106,27 +121,6 @@ def get_instrumentos():
     if response.status_code == 200:
         return list(set([item["id_dosificador"] for item in response.json() if item["id_dosificador"]]))
     return []
-
-# ---------------- Sección 1: Datos generales ---------------- #
-st.markdown("### 1. Datos generales")
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-
-lista_maquinas = get_maquinas()
-lista_instrumentos = get_instrumentos()
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    titulo = st.text_input("Título")
-    maquina = st.selectbox("Máquina", lista_maquinas) if lista_maquinas else st.text_input("Máquina (manual)")
-
-with col2:
-    fecha = st.date_input("Fecha", value=datetime.date.today())
-    operador = st.text_input("Operario", value=st.session_state.get("user_name", ""), disabled=True)
-
-with col3:
-    instrumento = st.selectbox("Instrumento de medida", lista_instrumentos) if lista_instrumentos else st.text_input("Instrumento (manual)")
-    trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
 
 # ---------------- Sección 2: Intervención ---------------- #
 st.markdown("### 2. Intervención")
@@ -166,7 +160,7 @@ if afecta_producto == "Sí":
             )
 
         traza_producto = st.file_uploader(
-            "📎 Subir traza del producto afectado",
+            "Subir traza del producto afectado",
             type=["pdf", "jpg", "png", "csv", "xlsx"],
             help="Adjunta documentación o evidencias"
         )
@@ -323,14 +317,60 @@ def enviar_datos():
             HTML(string=html_content).write_pdf(ruta_pdf)
 
             st.success(f"📄 PDF generado: {nombre_base}.pdf")
-            time.sleep(1.5)
-            st.rerun()
+
+            # Convertir el HTML a PDF y guardarlo
+            HTML(string=html_content).write_pdf(ruta_pdf)
+            st.success(f"📄 PDF generado: {nombre_base}.pdf")
+
+            tipo_notificacion = "Tratamiento NCs No Resuelta" if tipo_nc == "VQM MDM NC" else "VQM Temperaturas MI NC"
+
+            try:
+                resp = requests.get(f"{API_URL}/correos_usuarios")  # ruta completa
+                if resp.status_code == 200:
+                    correos_todos = resp.json()
+                    correos_destino = []
+
+                    for correo in correos_todos:
+                        if correo["activo"]:
+                            tipos = [t["nombre"] for t in correo.get("tipos", [])]
+                            if tipo_notificacion in tipos:
+                                correos_destino.append(correo["email"])
+
+                    if correos_destino:
+                        cuerpo = f"""
+                        Hola,
+
+                        Se ha registrado una nueva NO CONFORMIDAD validada en el sistema VQM.
+
+                        Tipo: {tipo_nc}
+                        Fecha: {fecha}
+                        Operario: {operador}
+                        Instrumento/Máquina: {instrumento or maquina}
+
+                        Puedes consultar más detalles en la aplicación VQM o revisar el informe generado.
+
+                        Saludos,
+                        Sistema VQM
+                        """
+                        for correo in correos_destino:
+                            enviar_email(correo, f"⚠️ Nueva NC registrada en VQM - {tipo_nc}", cuerpo)
+
+                        st.success("📧 Correos de notificación enviados correctamente.")
+                    else:
+                        st.warning(f"No hay correos activos asignados al tipo '{tipo_notificacion}'.")
+                else:
+                    st.error("❌ Error al consultar destinatarios para el envío automático de correos.")
+            except Exception as e:
+                st.error(f"❌ Error al enviar correos automáticos: {e}")
 
         else:
             st.error(f"❌ Error al guardar la NC: {response.text}")
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Error en la conexión con la API: {str(e)}")
 
-# botón para guardar
-if st.button("Guardar datos en la BBDD"):
+    time.sleep(5)
+    st.rerun()
+
+# ---------------- Botón para guardar la NC ---------------- #
+if st.button("📥 Guardar datos en la BBDD"):
     enviar_datos()

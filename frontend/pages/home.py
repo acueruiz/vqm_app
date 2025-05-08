@@ -54,54 +54,55 @@ if not df_vqm.empty:
         no_conformes = total_vqm - conformes
         st.metric(label="⚠️ VQM Báscula No Conformes", value=no_conformes)
 
-    # gráfico de conformidad
-    fig_conformidad = px.pie(df_vqm, names="vqm_bascula_conforme", title="📊 Porcentaje de Conformidad")
-    st.plotly_chart(fig_conformidad, use_container_width=True)
+# VQM Temperatura MI
+response_temp = requests.get(f"{API_URL}/vqm_temperatura_mi10")
+df_temp = pd.DataFrame(response_temp.json()) if response_temp.status_code == 200 else pd.DataFrame()
 
-    # gráfico de distribución de errores
-    fig_errores = px.histogram(df_vqm, x=["error_cantidad1", "error_cantidad2"], title="📉 Distribución de Errores")
-    st.plotly_chart(fig_errores, use_container_width=True)
+if not df_temp.empty:
+    conformes_temp = df_temp["vqm_conforme"].sum()
+    total_temp = len(df_temp)
 
-    # filtrado por operador
-    operadores = df_vqm["operador"].unique()
-    selected_operador = st.selectbox("👨‍🔧 Selecciona un Operador:", options=operadores)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label="🌡️ VQM Temperatura Conformes", value=conformes_temp)
+    with col2:
+        st.metric(label="⚠️ VQM Temperatura No Conformes", value=total_temp - conformes_temp)
 
-    df_filtrado = df_vqm[df_vqm["operador"] == selected_operador]
-    st.write(f"🔎 Mostrando datos para **{selected_operador}**")
-    st.dataframe(df_filtrado)
+df_vqm["semana"] = df_vqm["fecha"].dt.strftime("%Y-%W")
+df_agrupado = df_vqm.groupby(["semana", "vqm_bascula_conforme"]).size().reset_index(name="count")
 
-    # alertas de errores altos
-    max_error = df_vqm[["error_cantidad1", "error_cantidad2"]].max().max()
-    if max_error > 10:
-        st.warning(f"⚠️ Se han detectado errores superiores a 10 kg en algunas mediciones.")
-else:
-    st.warning("📭 No hay datos de VQM MDM disponibles.")
+fig_temporal = px.bar(df_agrupado, x="semana", y="count", color="vqm_bascula_conforme",
+                      title="📆 Evolución semanal de VQM Báscula", barmode="stack")
+st.plotly_chart(fig_temporal, use_container_width=True)
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-
-# notificación en tiempo real sobre No Conformidades
-st.subheader("🚨 Estado de No Conformidades")
 response_nc = requests.get(f"{API_URL}/tratamiento_nc_vqm")
-if response_nc.status_code == 200:
-    nc_data = response_nc.json()
-    nc_count = len(nc_data)
+df_nc = pd.DataFrame(response_nc.json()) if response_nc.status_code == 200 else pd.DataFrame()
 
-    if nc_count > 0:
-        st.warning(f"⚠️ Hay **{nc_count}** No Conformidades abiertas.")
-    else:
-        st.success("✅ No hay No Conformidades pendientes.")
+if not df_nc.empty:
+    top_op = df_nc["operario"].value_counts().reset_index()
+    top_op.columns = ["Operario", "NCs"]
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+    fig_top = px.bar(top_op, x="Operario", y="NCs", title="👷 Operarios con más NC registradas")
+    st.plotly_chart(fig_top, use_container_width=True)
 
-# acciones rápidas
-st.subheader("📩 Acciones Rápidas")
+if "titulo" in df_vqm.columns:
+    heatmap_df = df_vqm.groupby("titulo")[["error_cantidad1", "error_cantidad2"]].mean().reset_index()
+    heatmap_df["Media de errores"] = heatmap_df[["error_cantidad1", "error_cantidad2"]].mean(axis=1)
 
-col1, col2 = st.columns(2)
+    fig_heatmap = px.density_heatmap(heatmap_df, x="titulo", y="Media de errores",
+                                     title="🌡️ Promedio de errores por instrumento", nbinsx=20)
+    st.plotly_chart(fig_heatmap, use_container_width=True)
 
+nc_abiertas = df_nc[~df_nc["nc_validada"]].shape[0]
+color = "🔴" if nc_abiertas > 3 else "🟡" if nc_abiertas else "🟢"
+st.metric(label="Estado global de NC", value=f"{color} {nc_abiertas} pendientes")
+
+st.markdown("### 🧭 Navegación rápida")
+col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("📤 Enviar Reporte de VQM MDM"):
-        st.success("📨 Reporte enviado correctamente.")
-
+    st.link_button("Nueva VQM MDM", "/VQM_MDM")
 with col2:
-    if st.button("Actualizar Datos"):
-        st.experimental_rerun()
+    st.link_button("Nueva VQM Temperatura", "/VQM_Temperatura")
+with col3:
+    st.link_button("Tratamiento NC", "/Tratamiento_NC")
+

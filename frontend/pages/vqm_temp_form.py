@@ -5,6 +5,13 @@ import numpy as np
 from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
+import sys
+import os
+import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from utils.email_sender import enviar_email
 
 API_URL = "http://127.0.0.1:5000/vqm"
 
@@ -41,7 +48,7 @@ col1, col2 = st.columns(2)
 with col1:
     trimestre = st.selectbox("Trimestre", ["Primer Trimestre 2025", "Segundo Trimestre 2025", "Tercer Trimestre 2025", "Cuarto Trimestre 2025"], key="trimestre_main")
     maquina = st.selectbox("Máquina", df_vqm_temp["maquina"].unique(), key="maquina_main")
-    operador = st.text_input("Operador", value=st.session_state.get("user_name", ""), disabled=True)
+    operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
 
 with col2:
     filtro_maquina = df_vqm_temp[df_vqm_temp["maquina"] == maquina].iloc[0]
@@ -181,14 +188,52 @@ def enviar_datos():
                 st.error(f"❌ Error al guardar el registro {registro['fecha']}. {response.text}")
         except requests.exceptions.RequestException as e:
             st.error(f"❌ Error en la conexión con la API: {str(e)}")
+        
+    # Verificar si hay alguna NC en las cargas
+    if not st.session_state.cargas.empty and not all(st.session_state.cargas["vqm_conforme"]):
+        tipo_notificacion = "VQM Temperaturas MI NC"
+
+        try:
+            response = requests.get(f"{API_URL}/correos_usuarios")
+            if response.status_code == 200:
+                correos_todos = response.json()
+                correos_destino = []
+
+                for correo in correos_todos:
+                    if correo["activo"]:
+                        tipos = [t["nombre"] for t in correo.get("tipos", [])]
+                        if tipo_notificacion in tipos:
+                            correos_destino.append(correo["email"])
+
+                if correos_destino:
+                    cuerpo = f"""
+                    Hola,
+
+                    Se han registrado nuevos datos de VQM Temperatura MI.
+                    Algunas de las cargas pueden haber resultado NO CONFORMES.
+
+                    Revisa los resultados en la aplicación VQM.
+
+                    Saludos,
+                    Sistema VQM
+                    """
+                    for correo in correos_destino:
+                        enviar_email(correo, "⚠️ Nueva No Conformidad VQM Temperatura MI", cuerpo)
+                    st.success("Correos de notificación enviados correctamente.")
+                else:
+                    st.warning("No hay correos activos asignados al tipo VQM Temperaturas MI NC.")
+            else:
+                st.error("Error al consultar destinatarios de correo.")
+        except Exception as e:
+            st.error(f"❌ Error al enviar correos automáticos: {e}")
 
 # deshabilitar el botón si no hay suficientes registros
 boton_guardar_desactivado = len(st.session_state.cargas) < 5
 
 # mostrar advertencia si hay menos de 5 registros
 if boton_guardar_desactivado:
-    st.warning("⚠️ Debes agregar al menos 5 registros antes de guardar en la base de datos.")
+    st.warning("⚠️ Debes agregar al menos 5 registros antes de guardar en la base de datos.")    
 
-# botón para guardar datos en la BBDD
-if st.button("📥 Guardar datos en la BBDD", disabled=boton_guardar_desactivado):
+# ---------------- Botón para guardar la NC ---------------- #
+if st.button("📥 Guardar datos en la BBDD"):
     enviar_datos()

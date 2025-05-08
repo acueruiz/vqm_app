@@ -4,6 +4,12 @@ import pandas as pd
 from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from utils.email_sender import enviar_email
 
 API_URL = "http://127.0.0.1:5000/vqm"
 
@@ -57,7 +63,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     circuito = st.text_input("Circuito", mdm_details.get("circuito", ""), disabled=True)
-    operador = st.text_input("Operador", value=st.session_state.get("user_name", ""), disabled=True)
+    operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
 
 with col2:
     bascula = st.text_input("Báscula", mdm_details.get("bascula", ""), disabled=True)
@@ -140,18 +146,18 @@ with col3:
     mostrar_conformidad(vqm_bascula_conforme)
 
 with col4:
-    verif1_valor_maxico = st.text_input("Cantidad 1 - Valor másico (kg)")
+    verif1_valor_masico = st.text_input("Cantidad 1 - Valor másico (kg)")
     verif1_valor_bascula = st.text_input("Cantidad 1 - Valor báscula (kg)")
-    verif2_valor_maxico = st.text_input("Cantidad 2 - Valor másico (kg)")
+    verif2_valor_masico = st.text_input("Cantidad 2 - Valor másico (kg)")
     verif2_valor_bascula = st.text_input("Cantidad 2 - Valor báscula (kg)")
 
 # convertir todos los valores
 peso_patron = convertir_a_float(mdm_details.get("vr_masas_patron", 0.0))
 valor_vqm_bascula = convertir_a_float(valor_vqm_bascula)
 valor_cero_bascula = convertir_a_float(valor_cero_bascula)
-verif1_valor_maxico = convertir_a_float(verif1_valor_maxico)
+verif1_valor_masico = convertir_a_float(verif1_valor_masico)
 verif1_valor_bascula = convertir_a_float(verif1_valor_bascula)
-verif2_valor_maxico = convertir_a_float(verif2_valor_maxico)
+verif2_valor_masico = convertir_a_float(verif2_valor_masico)
 verif2_valor_bascula = convertir_a_float(verif2_valor_bascula)
 
 # cálculo errores
@@ -161,8 +167,8 @@ def calcular_error(valor_bascula, valor_maxico):
         return None
     return round((valor_bascula - valor_maxico) * 1000, 0)
 
-error_cantidad_1 = calcular_error(verif1_valor_bascula, verif1_valor_maxico)
-error_cantidad_2 = calcular_error(verif2_valor_bascula, verif2_valor_maxico)
+error_cantidad_1 = calcular_error(verif1_valor_bascula, verif1_valor_masico)
+error_cantidad_2 = calcular_error(verif2_valor_bascula, verif2_valor_masico)
 
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
@@ -204,9 +210,9 @@ def enviar_datos():
         "error_cantidad2": error_cantidad_2,
         "vqm_masico_conforme": vqm_masico_conforme == "CONFORME",
         "vqm_bascula_conforme": vqm_bascula_conforme == "CONFORME",
-        "cant1_verif1_valor_masico": verif1_valor_maxico if verif1_valor_maxico is not None else None,
+        "cant1_verif1_valor_masico": verif1_valor_masico if verif1_valor_masico is not None else None,
         "cant1_verif1_valor_bascula": verif1_valor_bascula if verif1_valor_bascula is not None else None,
-        "cant1_verif2_valor_masico": verif2_valor_maxico if verif2_valor_maxico is not None else None,
+        "cant1_verif2_valor_masico": verif2_valor_masico if verif2_valor_masico is not None else None,
         "cant1_verif2_valor_bascula": verif2_valor_bascula if verif2_valor_bascula is not None else None,
         "cant2_verif1_valor_masico": segunda_cantidad if segunda_cantidad is not None else None,
         "cant2_verif1_valor_bascula": verif1_valor_bascula if verif1_valor_bascula is not None else None,
@@ -227,3 +233,52 @@ def enviar_datos():
 
 if st.button("📥 Guardar datos en la BBDD"):
     enviar_datos()
+
+    if vqm_masico_conforme == "NO CONFORME" or vqm_bascula_conforme == "NO CONFORME":
+        # tipo común para todos los casos MDM
+        tipo_notificacion = "VQM MDM NC"
+
+        # Obtener correos con ese tipo de notificación
+        try:
+            response = requests.get(f"{API_URL}/correos_usuarios")
+            if response.status_code == 200:
+                correos_todos = response.json()
+                correos_destino = []
+
+                for correo in correos_todos:
+                    if correo["activo"]:
+                        tipos = [t["nombre"] for t in correo.get("tipos", [])]
+                        if tipo_notificacion in tipos:
+                            correos_destino.append(correo["email"])
+
+                if correos_destino:
+                    cuerpo = f"""
+                                Hola,
+
+                                Se ha registrado una nueva NO CONFORMIDAD en un formulario VQM MDM.
+
+                                Tipo de NC:
+                                {"- NC MÁSICO" if vqm_masico_conforme == "NO CONFORME" else ""}
+                                {"- NC BÁSCULA" if vqm_bascula_conforme == "NO CONFORME" else ""}
+
+                                Detalles:
+                                - Fecha: {fecha}
+                                - Operador: {operador}
+                                - Valor báscula: {valor_vqm_bascula} kg
+                                - Valor másico: {verif1_valor_masico} kg
+
+                                Puedes revisar más detalles en la aplicación VQM.
+
+                                Saludos,
+                                Sistema VQM
+                                """
+                    for correo in correos_destino:
+                        enviar_email(correo, "⚠️ Nueva No Conformidad VQM MDM", cuerpo)
+
+                    st.success("Formulario enviado y correos automáticos enviados.")
+                else:
+                    st.warning("No hay correos activos asignados al tipo VQM_MDM.")
+            else:
+                st.error("Error al consultar destinatarios de correo.")
+        except Exception as e:
+            st.error(f"❌ Error al enviar correos automáticos: {e}")

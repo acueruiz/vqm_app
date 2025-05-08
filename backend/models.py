@@ -1,7 +1,15 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, Float, Date, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from .database import db  # Importar la base de datos
 from flask_login import UserMixin  # Asegura compatibilidad con Flask-Login
+
+# tabla intermedia muchos-a-muchos entre correos y tipos de notificación
+notificaciones_usuarios = Table(
+    "notificaciones_usuarios",
+    db.metadata,
+    Column("correo_id", Integer, ForeignKey("correos_usuarios.id", ondelete="CASCADE"), primary_key=True),
+    Column("tipo_id", Integer, ForeignKey("tipos_notificacion.id", ondelete="CASCADE"), primary_key=True)
+)
 
 # clase Base para evitar repetir `id`
 class BaseModel(db.Model):
@@ -21,7 +29,7 @@ class Usuario(UserMixin, db.Model):  # Hereda de UserMixin
     password = Column(String, nullable=False)
     admin = Column(Boolean, default=False)
 
-    correos = relationship("CorreoUsuario", back_populates="usuario", cascade="all, delete")
+    correos = relationship("CorreoUsuario", cascade="all, delete")
     permisos = relationship("PermisoUsuario", back_populates="usuario", cascade="all, delete")
 
     def to_dict(self):
@@ -38,14 +46,15 @@ class CorreoUsuario(BaseModel):
     __tablename__ = "correos_usuarios"
 
     id = Column(Integer, primary_key=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=True)
     email = Column(String, nullable=False)
     nombre = Column(String, nullable=True)
     departamento = Column(String, nullable=False)
-    tipo_notificacion = Column(String, nullable=False)  # ej: "VQM_Bascula", "VQM_MDM"
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=True)
     activo = Column(Boolean, default=True)
 
-    usuario = relationship("Usuario", back_populates="correos", lazy="joined")
+    tipos = relationship("TipoNotificacion", secondary=notificaciones_usuarios, back_populates="usuarios")
+    usuario = relationship("Usuario")  # sin back_populates
+
 
     def to_dict(self):
         return {
@@ -54,9 +63,26 @@ class CorreoUsuario(BaseModel):
             "email": self.email,
             "nombre": self.nombre,
             "departamento": self.departamento,
-            "tipo_notificacion": self.tipo_notificacion,
-            "activo": self.activo
+            "activo": self.activo,
+            "tipos": [tipo.to_dict() for tipo in self.tipos]
         }
+
+class TipoNotificacion(BaseModel):
+    __tablename__ = "tipos_notificacion"
+
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String, unique=True, nullable=False)  # ej: VQM_MDM, VQM_Bascula, NC
+    descripcion = Column(String, nullable=True)
+
+    usuarios = relationship("CorreoUsuario", secondary="notificaciones_usuarios", back_populates="tipos")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion
+        }
+
 
 # modelo para los permisos por departamento
 class PermisoUsuario(BaseModel):
