@@ -19,14 +19,14 @@ def mostrar_sidebar():
     if os.path.exists(logo_path):
         st.sidebar.image(logo_path, use_container_width=True)
     else:
-        st.sidebar.warning("⚠️ No se encontró el logo. Verifica la ruta del archivo.")
+        st.sidebar.warning("No se encontró el logo. Verifica la ruta del archivo.")
 
     # menú de navegación
     st.sidebar.title("MENÚ DE NAVEGACIÓN")
 
-    st.sidebar.page_link("pages/home.py", label="Inicio", icon="🏠")
+    st.sidebar.page_link("pages/home.py", label="Inicio")
 
-    with st.sidebar.expander("📝 Formularios", expanded=False):
+    with st.sidebar.expander("Formularios", expanded=False):
         if tiene_departamento("MEDIDA") or tiene_departamento("OBTENCIÓN"):
             st.page_link("pages/vqm_mdm_form.py", label="VQM MDM Form")
         if tiene_departamento("OBTENCIÓN"):
@@ -34,22 +34,22 @@ def mostrar_sidebar():
         if tiene_departamento("GARANTÍA"):
             st.page_link("pages/gestion_nc_form.py", label="Gestión NC Form")
 
-    with st.sidebar.expander("📊 Visualización de Datos", expanded=False):
+    with st.sidebar.expander("Visualización de Datos", expanded=False):
         st.page_link("pages/view_data.py", label="Ver Datos MDM")
         st.page_link("pages/view_data_temp.py", label="Ver Datos Temp MI")
         st.page_link("pages/view_data_nc.py", label="Ver Datos NC")
 
-    with st.sidebar.expander("📊 Modificación de Datos", expanded=False):
+    with st.sidebar.expander("Modificación de Datos", expanded=False):
         st.page_link("pages/edit_datos_mdms.py", label="Modificar Datos MDM")
         st.page_link("pages/edit_vqm_temp.py", label="Modificar Datos Teóricos VQM Temp")
 
     if st.session_state["usuario"]["admin"]:
-        with st.sidebar.expander("⚙️ Administración", expanded=False):
+        with st.sidebar.expander("Administración", expanded=False):
             st.page_link("pages/users.py", label="Gestión de usuarios")
             st.page_link("pages/correos.py", label="Gestión de correos")
             st.page_link("pages/permisos.py", label="Gestión de permisos")
 
-    st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard", icon="📉")
+    st.sidebar.page_link("pages/vqm_dashboard.py", label="Dashboard")
 
     # separador y botón logout
     st.sidebar.markdown('<hr style="margin-top: 30px; margin-bottom: 15px; border: none; border-top: 2px solid #666;">', unsafe_allow_html=True)

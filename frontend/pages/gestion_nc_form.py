@@ -9,10 +9,8 @@ from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
 import sys
-import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
 from utils.email_sender import enviar_email
 
 API_URL = "http://127.0.0.1:5000/vqm"
@@ -21,196 +19,127 @@ API_URL = "http://127.0.0.1:5000/vqm"
 st.set_page_config(page_title="Gestión de No Conformidades", layout="wide", page_icon="⚠️")
 
 # Encabezado
-st.markdown('<div class="header">TRATAMIENTO DE LAS NC DE LAS VQM</div>', unsafe_allow_html=True)
+st.markdown("""
+    <div class='app-header'>
+      <h1>Gestión de No Conformidades</h1>
+      <p>Tratamiento y validación de NC detectadas en VQM de MDM y Temperatura</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
-# llamo a la función para autenticación de usuarios
 verificar_autenticacion()
-
-# llamo a la función para mostrar barra lateral
 mostrar_sidebar()
-
-# estilos de la página
 estilos_css()
 
+# ─────────────────────────────────────────────────────────────────────────────
 @st.cache_data
 def get_vqm_mdm_no_conformes():
-    response = requests.get(f"{API_URL}/vqm_mdm")
-    if response.status_code == 200:
-        return [item for item in response.json() if not item.get("vqm_masico_conforme")]
-    return []
+    r = requests.get(f"{API_URL}/vqm_mdm")
+    return [item for item in r.json() if not item.get("vqm_masico_conforme")] if r.status_code == 200 else []
 
 @st.cache_data
 def get_vqm_temp_no_conformes():
-    response = requests.get(f"{API_URL}/vqm_temperatura_mi10")
-    if response.status_code == 200:
-        return [item for item in response.json() if not item.get("vqm_conforme")]
-    return []
+    r = requests.get(f"{API_URL}/vqm_temperatura_mi10")
+    return [item for item in r.json() if not item.get("vqm_conforme")] if r.status_code == 200 else []
 
-# ---------------- Selección de tipo de NC ---------------- #
-st.markdown("### Selección del tipo de NC")
-tipo_nc = st.radio(
-    "Selecciona el tipo de NC a tratar:",
-    ["NC en MDM", "NC en Temperatura MI"],
-    horizontal=True,
-    index=None  # <- Esto evita que haya una opción preseleccionada
-)
+@st.cache_data
+def get_maquinas():
+    r = requests.get(f"{API_URL}/vqm_temperatura")
+    return list(set([i["maquina"] for i in r.json() if i.get("maquina")])) if r.status_code == 200 else []
 
+@st.cache_data
+def get_instrumentos():
+    r = requests.get(f"{API_URL}/datos_mdms")
+    return list(set([i["id_dosificador"] for i in r.json() if i.get("id_dosificador")])) if r.status_code == 200 else []
+
+# ─────────────────────────────────────────────────────────────────────────────
+st.subheader("Selección del tipo de NC")
+tipo_nc = st.radio("Selecciona el tipo de NC a tratar:", ["NC en MDM", "NC en Temperatura MI"], horizontal=True, index=None)
 if tipo_nc is None:
     st.info("Selecciona primero el tipo de No Conformidad.")
     st.stop()
 
 vqm_seleccionada = None
-maquina = None
-instrumento = None
+instrumento = maquina = None
 
 if tipo_nc == "NC en MDM":
-    vqms_mdm = get_vqm_mdm_no_conformes()
-    opciones = [f"{item['titulo']}  -  {item['operador']}  -  {item['fecha']}" for item in vqms_mdm]
+    opciones = [f"{i['titulo']}  -  {i['operador']}  -  {i['fecha']}" for i in get_vqm_mdm_no_conformes()]
     seleccion = st.selectbox("Selecciona una VQM MDM no conforme:", opciones)
-    vqm_seleccionada = vqms_mdm[opciones.index(seleccion)]
+    vqm_seleccionada = get_vqm_mdm_no_conformes()[opciones.index(seleccion)]
     instrumento = vqm_seleccionada["titulo"]
 
-elif tipo_nc == "NC en Temperatura MI":
-    vqms_temp = get_vqm_temp_no_conformes()
-    opciones = [f"{item['titulo']} - {item['trimestre_anio']}" for item in vqms_temp]
+if tipo_nc == "NC en Temperatura MI":
+    opciones = [f"{i['titulo']} - {i['trimestre_anio']}" for i in get_vqm_temp_no_conformes()]
     seleccion = st.selectbox("Selecciona una VQM Temperatura no conforme:", opciones)
-    vqm_seleccionada = vqms_temp[opciones.index(seleccion)]
+    vqm_seleccionada = get_vqm_temp_no_conformes()[opciones.index(seleccion)]
     maquina = vqm_seleccionada["titulo"]
 
-# si ya se seleccionó una VQM, mostrar el formulario completo
+# ─────────────────────────────────────────────────────────────────────────────
 if vqm_seleccionada:
-    # ---------------- Sección 1: Datos generales ---------------- #
-    st.markdown("### 1. Datos generales")
+    st.subheader("1. Datos generales")
     st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        # Construcción automática del título
-        if tipo_nc == "NC en MDM":
-            titulo_predefinido = f"VQM NC del {instrumento}"
-        elif tipo_nc == "NC en Temperatura MI":
-            titulo_predefinido = f"VQM NC de Temperatura MI - {maquina}"
-        else:
-            titulo_predefinido = ""
-
-        # Campo de título editable, pero pre-rellenado
-        titulo = st.text_input("Título", value=titulo_predefinido)
-
+        titulo = st.text_input("Título", f"VQM NC del {instrumento}" if tipo_nc == "NC en MDM" else f"VQM NC de Temperatura MI - {maquina}")
     with col2:
         fecha = st.date_input("Fecha", value=datetime.date.today())
         operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
-
     with col3:
         trimestre = st.selectbox("Trimestre", ["1 Trimestre", "2 Trimestre", "3 Trimestre", "4 Trimestre"])
 
-    # Luego todo tu código actual del formulario...
-    # Secciones 2 a 5 + enviar_datos() + boton "Guardar"
-    # (puedes copiarlo tal cual debajo de este bloque condicional)
-
-@st.cache_data
-def get_maquinas():
-    response = requests.get(f"{API_URL}/vqm_temperatura")
-    if response.status_code == 200:
-        return list(set([item["maquina"] for item in response.json() if item["maquina"]]))
-    return []
-
-@st.cache_data
-def get_instrumentos():
-    response = requests.get(f"{API_URL}/datos_mdms")
-    if response.status_code == 200:
-        return list(set([item["id_dosificador"] for item in response.json() if item["id_dosificador"]]))
-    return []
-
-# ---------------- Sección 2: Intervención ---------------- #
-st.markdown("### 2. Intervención")
+# ─────────────────────────────────────────────────────────────────────────────
+st.subheader("2. Intervención")
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
-# Descripción → Resultado → Causa
-descripcion = st.text_area(
-    "Descripción de la intervención",
-    height=150,
-    placeholder="Explica en detalle qué intervención se ha realizado"
-)
+descripcion = st.text_area("Descripción de la intervención", height=150, placeholder="Explica en detalle qué intervención se ha realizado")
+resultado = st.text_input("Resultado tras la intervención", placeholder="¿Qué resultado se obtuvo después de intervenir?")
+causa     = st.text_input("Causa primera del fallo", placeholder="¿Cuál fue la causa raíz detectada?")
 
-resultado = st.text_input(
-    "Resultado tras la intervención",
-    placeholder="¿Qué resultado se obtuvo después de intervenir?"
-)
-
-causa = st.text_input(
-    "Causa primera del fallo",
-    placeholder="¿Cuál fue la causa raíz detectada?"
-)
-
-# ---------------- Sección 3: Posible efecto sobre el producto ---------------- #
-st.markdown("### 3. Posible efecto sobre el producto")
+# ─────────────────────────────────────────────────────────────────────────────
+st.subheader("3. Posible efecto sobre el producto")
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 afecta_producto = st.radio("¿Posible efecto sobre el producto?", ["No", "Sí"], horizontal=True)
+acciones_producto = traza_producto = None
 
 if afecta_producto == "Sí":
     with st.expander("Detalles sobre la afectación al producto"):
         resuelto_producto = st.radio("¿Anomalía resuelta por mantenimiento?", ["Sí", "No"], horizontal=True, key="resuelto_producto")
-
         if resuelto_producto == "No":
-            acciones_producto = st.text_area(
-                "Acciones para evitar producto NC futuro",
-                placeholder="Describe qué acciones se han tomado o se tomarán"
-            )
+            acciones_producto = st.text_area("Acciones para evitar producto NC futuro", placeholder="Describe qué acciones se han tomado o se tomarán")
+        traza_producto = st.file_uploader("Subir traza del producto afectado", type=["pdf", "jpg", "png", "csv", "xlsx"])
 
-        traza_producto = st.file_uploader(
-            "Subir traza del producto afectado",
-            type=["pdf", "jpg", "png", "csv", "xlsx"],
-            help="Adjunta documentación o evidencias"
-        )
-else:
-    acciones_producto = None
-    traza_producto = None
-
-# ---------------- Sección 4: Posible impacto sobre el proceso ---------------- #
-st.markdown("### 4. Posible impacto sobre el proceso")
+# ─────────────────────────────────────────────────────────────────────────────
+st.subheader("4. Posible impacto sobre el proceso")
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 afecta_proceso = st.radio("¿Posible impacto sobre el proceso?", ["No", "Sí"], horizontal=True)
+acciones_proceso = None
 
 if afecta_proceso == "Sí":
     with st.expander("Detalles sobre el impacto en el proceso"):
         resuelto_proceso = st.radio("¿Anomalía resuelta por mantenimiento?", ["Sí", "No"], horizontal=True, key="resuelto_proceso")
-
         if resuelto_proceso == "No":
-            acciones_proceso = st.text_area(
-                "Acciones para compensar deficiencia del proceso",
-                placeholder="Describe qué acciones correctoras o preventivas se aplican"
-            )
-else:
-    acciones_proceso = None
+            acciones_proceso = st.text_area("Acciones para compensar deficiencia del proceso", placeholder="Describe acciones correctoras o preventivas")
 
-# ---------------- Sección 5: Validación final de la NC ---------------- #
-st.markdown("### 5. Validación final de la NC")
+# ─────────────────────────────────────────────────────────────────────────────
+st.subheader("5. Validación final de la NC")
 st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 nc_validada = st.selectbox("¿NC validada?", ["Sí", "Sí con acciones", "No"])
-
-comentarios_validacion = None
-producto_nc = None
-acciones_producto_nc = None
-fecha_acciones = None
+comentarios_validacion_si = comentarios_validacion_no = fecha_acciones = None
 
 if nc_validada == "Sí con acciones":
-    comentarios_validacion_si = st.text_area(
-        "Comentarios del responsable o validador",
-        placeholder="Explica por qué se toman acciones o por qué queda sin validar aún"
-    )
+    comentarios_validacion_si = st.text_area("Comentarios del responsable o validador")
+    fecha_acciones = st.date_input("Fecha de implementación de acciones", value=datetime.date.today())
 
 if nc_validada == "No":
-    comentarios_validacion_no = st.text_area(
-        "Comentarios del responsable o validador",
-        placeholder="Explica por qué no está validada, con opción a modificar a futuro"
-    )
+    producto_nc = st.radio("¿El producto final queda como No Conforme?", ["No", "Sí"], key="producto_nc_radio")
+    if producto_nc == "Sí":
+        acciones_producto_nc = st.text_area("Acciones adicionales sobre el producto No Conforme")
 
-if nc_validada == "Sí con acciones":
-    fecha_acciones = st.date_input("Fecha de implementación de acciones", value=datetime.date.today())
+
 
 # ---------------- Guardado de datos en la BBDD ---------------- #
 
@@ -274,7 +203,7 @@ def enviar_datos():
         response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)
         if response.status_code == 201:
             st.success("✅ No Conformidad guardada correctamente.")
-            # 📄 Generar informe PDF tras guardar la NC usando Jinja2
+            # Generar informe PDF tras guardar la NC usando Jinja2
             env = Environment(loader=FileSystemLoader("templates"))
             template = env.get_template("informe_nc.html")
 
@@ -316,11 +245,9 @@ def enviar_datos():
             # Convertir el HTML a PDF y guardarlo
             HTML(string=html_content).write_pdf(ruta_pdf)
 
-            st.success(f"📄 PDF generado: {nombre_base}.pdf")
-
             # Convertir el HTML a PDF y guardarlo
             HTML(string=html_content).write_pdf(ruta_pdf)
-            st.success(f"📄 PDF generado: {nombre_base}.pdf")
+            st.success(f"PDF generado: {nombre_base}.pdf")
 
             tipo_notificacion = "Tratamiento NCs No Resuelta" if tipo_nc == "VQM MDM NC" else "VQM Temperaturas MI NC"
 
@@ -355,22 +282,22 @@ def enviar_datos():
                         for correo in correos_destino:
                             enviar_email(correo, f"⚠️ Nueva NC registrada en VQM - {tipo_nc}", cuerpo)
 
-                        st.success("📧 Correos de notificación enviados correctamente.")
+                        st.success("Correos de notificación enviados correctamente.")
                     else:
                         st.warning(f"No hay correos activos asignados al tipo '{tipo_notificacion}'.")
                 else:
-                    st.error("❌ Error al consultar destinatarios para el envío automático de correos.")
+                    st.error("Error al consultar destinatarios para el envío automático de correos.")
             except Exception as e:
-                st.error(f"❌ Error al enviar correos automáticos: {e}")
+                st.error(f"Error al enviar correos automáticos: {e}")
 
         else:
-            st.error(f"❌ Error al guardar la NC: {response.text}")
+            st.error(f"Error al guardar la NC: {response.text}")
     except requests.exceptions.RequestException as e:
-        st.error(f"❌ Error en la conexión con la API: {str(e)}")
+        st.error(f"Error en la conexión con la API: {str(e)}")
 
     time.sleep(5)
     st.rerun()
 
 # ---------------- Botón para guardar la NC ---------------- #
-if st.button("📥 Guardar datos en la BBDD"):
+if st.button("Guardar datos en la BBDD"):
     enviar_datos()

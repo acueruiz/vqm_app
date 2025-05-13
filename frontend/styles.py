@@ -14,9 +14,19 @@ def estilos_css():
                 padding-right: 1rem !important;
             }
 
-            /* Cabecera */
-            .app-header h1 { margin:0; font-size:3.5rem; }
-            .app-header p { margin:0.3rem 0 1rem; font-size:1.5rem; font-weight:300; }
+            /* Cabecera personalizada */
+            .app-header {
+                padding-top: 2rem !important;
+            }
+            .app-header h1 {
+                margin: 0;
+                font-size: 3rem;
+            }
+            .app-header p {
+                margin: 0.3rem 0 1rem;
+                font-size: 1.3rem;
+                font-weight: 300;
+            }
 
             /* Section headers sin border-radius inferior y sin separación */
             .section-header {
@@ -31,6 +41,16 @@ def estilos_css():
             .section-header--trimestral-cero { background-color: #ffb3e6 !important; }
             .section-header--trimestral-temp { background-color: #d6c944 !important; }
 
+            /* Nuevo para formularios */
+            .section-header--form {
+                background-color: transparent !important;
+                color: black !important;
+                font-size: 1.25rem !important;
+                padding-bottom: 0.25rem !important;
+                border-bottom: 1px solid #ddd !important;
+                margin-top: 2rem !important;
+            }
+
             /* DataFrame: quitar border-radius superior */
             .stDataFrame > div > div:first-child {
                 border-top-left-radius: 0 !important;
@@ -38,8 +58,11 @@ def estilos_css():
             }
 
             /* Elimina separadores <hr> generados manualmente */
-            hr.app-divider { display: none !important; }
+            hr.app-divider {
+                display: none !important;
+            }
         </style>
         """,
         unsafe_allow_html=True
     )
+

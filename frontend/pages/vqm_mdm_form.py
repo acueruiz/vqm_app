@@ -13,11 +13,13 @@ from utils.email_sender import enviar_email
 
 API_URL = "http://127.0.0.1:5000/vqm"
 
-# configuración de la página
-st.set_page_config(page_title="VQM MDM - Introducción de Datos", layout="wide", page_icon="📝")
-
-# encabezado
-st.markdown('<div class="header">VQM MDM - INTRODUCCIÓN DE DATOS</div>', unsafe_allow_html=True)
+st.markdown("""
+    <div class='app-header'>
+      <h1>VQM MDM – Introducción de Datos</h1>
+      <p>Formulario de registro para Verificación de Calidad Másica y Báscula</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
 # llamo a la función para autenticación de usuarios
 verificar_autenticacion()
@@ -48,6 +50,8 @@ def get_mdm_data():
 
 df_mdm = get_mdm_data()
 
+st.subheader("Datos del MDM")
+
 # selección del MDM
 if not df_mdm.empty:
     mdm_selected = st.selectbox("Módulo MDM:", df_mdm["masico"].unique())
@@ -56,11 +60,12 @@ else:
     mdm_selected = None
     mdm_details = {}
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+st.markdown("---")
+
+st.subheader("Parámetros de referencia")
 
 # formulario de introducción de datos
 col1, col2, col3 = st.columns(3)
-
 with col1:
     circuito = st.text_input("Circuito", mdm_details.get("circuito", ""), disabled=True)
     operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
@@ -70,8 +75,6 @@ with col2:
 
 with col3:
     fecha = st.date_input("Fecha")
-
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
 
 # obtener tolerancias desde la tabla mdm_details
 tolerancia_cero = mdm_details.get("tolerancia_cero", 0.1)  # Valor por defecto 0.1 si no está definido
@@ -124,6 +127,10 @@ def mostrar_conformidad(mensaje):
         </div>
     """, unsafe_allow_html=True)
 
+st.markdown("---")
+
+st.subheader("Verificación de la báscula")
+
 col1, col2, col3, col4 = st.columns(4, gap="medium")
 
 with col1:
@@ -170,8 +177,6 @@ def calcular_error(valor_bascula, valor_maxico):
 error_cantidad_1 = calcular_error(verif1_valor_bascula, verif1_valor_masico)
 error_cantidad_2 = calcular_error(verif2_valor_bascula, verif2_valor_masico)
 
-st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-
 # verificación de conformidad
 tolerancia1 = mdm_details.get("tolerancia1", 10)
 tolerancia2 = mdm_details.get("tolerancia2", 10)
@@ -186,6 +191,10 @@ def verificar_conformidad(error1, error2, tolerancia1, tolerancia2, segunda_cant
     return "CONFORME"
 
 vqm_masico_conforme = verificar_conformidad(error_cantidad_1, error_cantidad_2, tolerancia1, tolerancia2, convertir_a_float(segunda_cantidad))
+
+st.markdown("---")
+
+st.subheader("Verificación del MDM")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -225,13 +234,13 @@ def enviar_datos():
     try:
         response = requests.post(f"{API_URL}/vqm_mdm", json=nuevo_registro)
         if response.status_code == 201:
-            st.success("✅ Datos enviados correctamente.")
+            st.success("Datos enviados correctamente.")
         else:
-            st.error(f"❌ Error al enviar los datos. {response.text}")
+            st.error(f"Error al enviar los datos. {response.text}")
     except requests.exceptions.RequestException as e:
-        st.error(f"❌ Error en la conexión con la API: {str(e)}")
+        st.error(f"Error en la conexión con la API: {str(e)}")
 
-if st.button("📥 Guardar datos en la BBDD"):
+if st.button("Guardar datos en la BBDD"):
     enviar_datos()
 
     if vqm_masico_conforme == "NO CONFORME" or vqm_bascula_conforme == "NO CONFORME":
@@ -281,4 +290,4 @@ if st.button("📥 Guardar datos en la BBDD"):
             else:
                 st.error("Error al consultar destinatarios de correo.")
         except Exception as e:
-            st.error(f"❌ Error al enviar correos automáticos: {e}")
+            st.error(f"Error al enviar correos automáticos: {e}")
