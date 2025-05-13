@@ -95,7 +95,7 @@ for dept in departamentos:
         correos_activos.extend([c for c in correos if c["activo"]])
 
 # Mostrar sección de configuración de notificaciones
-st.markdown("#### Tipos de notificación por correo")
+st.markdown("### Tipos de notificación por correo")
 for correo in correos_activos:
     correo_id = correo["id"]
     email = correo["email"]
@@ -133,6 +133,7 @@ correos_todos = response.json() if response.status_code == 200 else []
 # Obtener tipos de notificación disponibles (ya se hizo arriba, pero aseguramos)
 if not tipos_disponibles:
     resp_tipos = requests.get(f"{API_URL}/tipos_notificacion")
+    
     tipos_disponibles = resp_tipos.json() if resp_tipos.status_code == 200 else []
 
 # Construir la tabla
