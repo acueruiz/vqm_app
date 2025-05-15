@@ -18,20 +18,22 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="Gestión de No Conformidades", layout="wide", page_icon="⚠️")
 
-# Encabezado
+verificar_autenticacion()
+mostrar_sidebar()
+estilos_css()
+
+# encabezado
 st.markdown("""
     <div class='app-header'>
-      <h1>Gestión de No Conformidades</h1>
+      <h1>Gestión de NCs de las VQMs</h1>
       <p>Tratamiento y validación de NC detectadas en VQM de MDM y Temperatura</p>
     </div>
     <hr class='app-divider'/>
 """, unsafe_allow_html=True)
 
-verificar_autenticacion()
-mostrar_sidebar()
-estilos_css()
+st.markdown("---")
 
-# ─────────────────────────────────────────────────────────────────────────────
+# cogemos los datos de la bbdd con las rutas correspondientes
 @st.cache_data
 def get_vqm_mdm_no_conformes():
     r = requests.get(f"{API_URL}/vqm_mdm")

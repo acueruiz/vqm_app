@@ -19,7 +19,14 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
-st.title("Gestión de correos por departamento")
+# encabezado visual
+st.markdown("""
+    <div class='app-header'>
+        <h1>Gestión de correos</h1>
+        <p>Gestión de correos por departamento para el envíio automatizado de emails</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
 # Lista de departamentos
 departamentos = ["MANTENIMIENTO", "OBTENCIÓN", "MEDIDA"]
@@ -113,7 +120,7 @@ for correo in correos_activos:
     )
 
     # Botón para guardar cambios
-    if st.button(f"💾 Guardar notificaciones para {email}", key=f"btn_save_notif_{correo_id}"):
+    if st.button(f"Guardar notificaciones para {email}", key=f"btn_save_notif_{correo_id}"):
         resp = requests.put(f"{API_URL}/correos/{correo_id}/notificaciones", json={
             "tipos": seleccionados
         })

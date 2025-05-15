@@ -10,8 +10,14 @@ API_URL = "http://127.0.0.1:5000/vqm"
 # Configuración de la página
 st.set_page_config(page_title="Gestión de NC - Datos", layout="wide", page_icon="📋")
 
-# Encabezado
-st.markdown('<div class="header">GESTIÓN DE NC - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
+# encabezado
+st.markdown("""
+    <div class='app-header'>
+        <h1>Visualización de la Gestión de NCs</h1>
+        <p>Datos registrados de las validaciones de No Conformes</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
 # llamo a la función para autenticación de usuarios
 verificar_autenticacion()
@@ -35,7 +41,7 @@ def get_nc_data():
 
         return df
     else:
-        st.error("❌ Error al obtener datos de No Conformidades.")
+        st.error("Error al obtener datos de No Conformidades.")
         return pd.DataFrame()
 
 df_nc = get_nc_data()
@@ -61,7 +67,7 @@ with col3:
     fecha_fin = st.date_input("Hasta fecha:")
 
 with col4:
-    buscar = st.button("🔍 Buscar", use_container_width=True)
+    buscar = st.button("Buscar", use_container_width=True)
 
 if buscar:
     st.session_state.filtrar = True
@@ -75,48 +81,35 @@ if "filtrar" in st.session_state and st.session_state.filtrar:
         df_nc = df_nc[(df_nc["fecha"] >= pd.to_datetime(fecha_inicio)) & 
                       (df_nc["fecha"] <= pd.to_datetime(fecha_fin))]
 
-# ---------------- Mostrar tabla con estilos ---------------- #
-if not df_nc.empty:
-    df_nc = df_nc.sort_values(by="fecha", ascending=False).reset_index(drop=True)
+# función de estilo
+def colorear_conformidad(val):
+    if val == "CONFORME":
+        return 'background-color: #4CAF50; color: white; font-weight: bold;'
+    elif val == "NO CONFORME":
+        return 'background-color: #FF4B4B; color: white; font-weight: bold;'
+    return ''
 
-    def highlight_non_conform(val):
-        if val is False:  # Resaltar valores no conformes
-            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
-        return ''
-    
-    # Definir alias para las columnas
-    column_aliases = {
-        "titulo": "Título",
-        "fecha": "Fecha",
-        "operario": "Operario",
-        "nc_validada": "NC Validada",
-        "vqm_conforme": "VQM Conforme",
-        "descripcion_intervencion": "Causa",
-        "resultado_intervencion": "Resultado"
-    }
+# transformar booleanos a texto
+df_nc["nc_validada"] = df_nc["nc_validada"].map({True: "CONFORME", False: "NO CONFORME"})
+df_nc["vqm_conforme"] = df_nc["vqm_conforme"].map({True: "CONFORME", False: "NO CONFORME"})
 
-    # Renombrar las columnas en el DataFrame
-    df_nc = df_nc.rename(columns=column_aliases)
+# renombrar columnas
+df_nc = df_nc.rename(columns={
+    "titulo": "Título",
+    "fecha": "Fecha",
+    "operario": "Operario",
+    "descripcion_intervencion": "Causa",
+    "resultado_intervencion": "Resultado",
+    "vqm_conforme": "VQM Conforme",
+    "nc_validada": "NC Validada"
+})
 
-    # Mostrar la tabla en Streamlit con formato
-    st.dataframe(
-        df_nc.style.applymap(highlight_non_conform, 
-                            subset=["NC Validada", "VQM Conforme"]),
-        use_container_width=True
-    )
+# reordenar columnas
+df_nc = df_nc[["Título", "Fecha", "Operario", "NC Validada", "VQM Conforme", "Causa", "Resultado"]]
 
-else:
-    st.warning("No se encontraron datos para los filtros seleccionados.")
-
-# ---------------- Botones de exportación ---------------- #
-col1, col2 = st.columns([1, 1])
-
-with col1:
-    if st.button("📥 Exportar a CSV"):
-        df_nc.to_csv("datos_nc.csv", index=False)
-        st.success("Archivo CSV generado correctamente.")
-
-with col2:
-    if st.button("📥 Exportar a Excel"):
-        df_nc.to_excel("datos_nc.xlsx", index=False)
-        st.success("Archivo Excel generado correctamente.")
+st.dataframe(
+    df_nc.style
+        .applymap(colorear_conformidad, subset=["NC Validada"])
+        .applymap(colorear_conformidad, subset=["VQM Conforme"]),
+    use_container_width=True
+)

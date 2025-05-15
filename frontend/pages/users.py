@@ -20,7 +20,14 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
-st.title("Gestión de usuarios")
+# encabezado visual
+st.markdown("""
+    <div class='app-header'>
+        <h1>Gestión de usuarios</h1>
+        <p>Pantalla para creación, modificación y borrado de usuarios que acceden a la aplicación</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
 # Obtener lista de usuarios
 response = requests.get(f"{API_URL}/vqm/usuarios")

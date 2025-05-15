@@ -19,7 +19,14 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
-st.markdown('<div class="header">Gestión de permisos por departamento</div>', unsafe_allow_html=True)
+# encabezado visual
+st.markdown("""
+    <div class='app-header'>
+        <h1>Gestión de permisos</h1>
+        <p>Gestión de permisos por departamento</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
 
 # lista de departamentos
 departamentos = ["OBTENCIÓN", "MEDIDA", "GARANTÍA"]

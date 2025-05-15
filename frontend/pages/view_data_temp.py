@@ -13,6 +13,15 @@ st.set_page_config(page_title="VQM Temperatura MI10 - Datos", layout="wide", pag
 # Encabezado
 st.markdown('<div class="header">VQM Temperatura MI10 - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
 
+# encabezado
+st.markdown("""
+    <div class='app-header'>
+        <h1>VQM Temperatura MI10</h1>
+        <p>Datos registrados de verificaciones de temperaturas de los MIs</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
+
 # llamo a la función para autenticación de usuarios
 verificar_autenticacion()
 
@@ -35,7 +44,7 @@ def get_temp_mi10_data():
 
         return df
     else:
-        st.error("❌ Error al obtener datos de VQM Temperatura MI10.")
+        st.error("Error al obtener datos de VQM Temperatura MI10.")
         return pd.DataFrame()
 
 df_temp_mi10 = get_temp_mi10_data()
@@ -55,7 +64,7 @@ with col2:
     trimestre_selected = st.selectbox("Trimestre", ["Todos"] + list(df_temp_mi10["trimestre_anio"].unique()))
 
 with col3:
-    if st.button("🔍 Filtrar"):
+    if st.button("Filtrar"):
         st.session_state.filtrar = True
 
 # Filtrar datos según selección
@@ -66,31 +75,41 @@ if "filtrar" in st.session_state and st.session_state.filtrar:
     if trimestre_selected != "Todos":
         df_temp_mi10 = df_temp_mi10[df_temp_mi10["trimestre_anio"] == trimestre_selected]
 
-# Mostrar tabla con funcionalidades adicionales
+# Mostrar tabla con estilo uniforme
 if not df_temp_mi10.empty:
-    df_temp_mi10 = df_temp_mi10.sort_values(by="fecha", ascending=False)
-    df_temp_mi10 = df_temp_mi10.reset_index(drop=True)
-    
-    def highlight_non_conform(val):
-        if val is False:  # Resalta los NO CONFORMES en rojo
+    df_temp_mi10 = df_temp_mi10.sort_values(by="fecha", ascending=False).reset_index(drop=True)
+
+    # renombrar columnas útiles y eliminar las que no son clave
+    df_temp_mi10 = df_temp_mi10[[
+        "titulo", "fecha", "operario", "trimestre_anio", "temperatura_mi",
+        "temperatura_pistola", "diferencia_temperaturas", "vqm_conforme"
+    ]].rename(columns={
+        "titulo": "Máquina",
+        "fecha": "Fecha",
+        "operario": "Operador",
+        "trimestre_anio": "Trimestre",
+        "temperatura_mi": "Temperatura MI",
+        "temperatura_pistola": "Temperatura Pistola",
+        "diferencia_temperaturas": "ΔT (MI - Pistola)",
+        "vqm_conforme": "Conformidad"
+    })
+
+    # convertir conformidad a texto
+    df_temp_mi10["Conformidad"] = df_temp_mi10["Conformidad"].map({True: "CONFORME", False: "NO CONFORME"})
+
+    # estilo condicional
+    def colorear_conformidad(val):
+        if val == "NO CONFORME":
             return 'background-color: #FF4B4B; color: white; font-weight: bold;'
+        elif val == "CONFORME":
+            return 'background-color: #4CAF50; color: white; font-weight: bold;'
         return ''
 
-    # Mostrar en Streamlit con resaltado de NO CONFORMIDADES
-    st.dataframe(df_temp_mi10.style.applymap(highlight_non_conform, subset=["vqm_conforme"]))
-
+    # mostrar tabla con formato
+    st.dataframe(
+        df_temp_mi10.style.applymap(colorear_conformidad, subset=["Conformidad"]),
+        use_container_width=True,
+        height=700
+    )
 else:
     st.warning("No se encontraron datos para los filtros seleccionados.")
-
-# Botones adicionales
-col1, col2 = st.columns([1, 1])
-
-with col1:
-    if st.button("📥 Exportar a CSV"):
-        df_temp_mi10.to_csv("datos_vqm_temperatura_mi10.csv", index=False)
-        st.success("Archivo CSV generado correctamente.")
-
-with col2:
-    if st.button("📥 Exportar a Excel"):
-        df_temp_mi10.to_excel("datos_vqm_temperatura_mi10.xlsx", index=False)
-        st.success("Archivo Excel generado correctamente.")

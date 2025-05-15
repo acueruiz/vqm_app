@@ -1,120 +1,105 @@
 import streamlit as st
-import requests
 import pandas as pd
+import requests
 from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
 
-API_URL = "http://127.0.0.1:5000/vqm"
-
-# Configuración de la página
+# configuración de la página
 st.set_page_config(page_title="VQM MDM - Datos", layout="wide", page_icon="📋")
-
-# Encabezado
-st.markdown('<div class="header">VQM MDM - VISUALIZACIÓN DE DATOS</div>', unsafe_allow_html=True)
-
-# llamo a la función para autenticación de usuarios
+estilos_css()
 verificar_autenticacion()
-
-# llamo a la función para mostrar barra lateral
 mostrar_sidebar()
 
-# estilos de la página
-estilos_css()
+# define la URL de la API
+API_URL = "http://127.0.0.1:5000/vqm"
 
-# Cargar datos de la API Flask
+# encabezado
+st.markdown("""
+    <div class='app-header'>
+        <h1>Visualización de VQM MDM</h1>
+        <p>Datos registrados de verificaciones másicas y báscula</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
+
+# cargar datos desde la API
 @st.cache_data
 def get_mdm_data():
     response = requests.get(f"{API_URL}/vqm_mdm")
     if response.status_code == 200:
         df = pd.DataFrame(response.json())
-
-        # Verificar que la columna 'fecha' existe y convertirla a datetime
         if "fecha" in df.columns:
             df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
-
         return df
     else:
-        st.error("❌ Error al obtener detalles de MDMs.")
+        st.error("❌ Error al obtener datos de MDM.")
         return pd.DataFrame()
 
 df_mdm = get_mdm_data()
 
-# Verifica que el DataFrame no esté vacío antes de continuar
+# si no hay datos, detener
 if df_mdm.empty:
     st.warning("No hay datos disponibles.")
     st.stop()
 
-# Filtrar solo las columnas necesarias y en el orden específico
+# seleccionar solo las columnas clave
 df_mdm = df_mdm[["titulo", "fecha", "operador", "vqm_bascula_conforme", "vqm_masico_conforme"]]
 
-# Filtros de búsqueda
-col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+# subencabezado de filtros
+st.subheader("Filtros de búsqueda")
 
+# filtros
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    mdm_selected = st.selectbox("MDM", ["Todos"] + list(df_mdm["titulo"].unique()))
-
+    mdm_selected = st.selectbox("MDM", ["Todos"] + sorted(df_mdm["titulo"].unique()))
 with col2:
     fecha_inicio = st.date_input("Desde fecha:")
-
 with col3:
     fecha_fin = st.date_input("Hasta fecha:")
-
 with col4:
     buscar = st.button("🔍 Buscar", use_container_width=True)
 
 if buscar:
     st.session_state.filtrar = True
 
-# Filtrar datos según selección
+# aplicar filtros si corresponde
 if "filtrar" in st.session_state and st.session_state.filtrar:
     if mdm_selected != "Todos":
         df_mdm = df_mdm[df_mdm["titulo"] == mdm_selected]
+    df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
+                    (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
 
-    if "fecha" in df_mdm.columns:
-        df_mdm = df_mdm[(df_mdm["fecha"] >= pd.to_datetime(fecha_inicio)) & 
-                        (df_mdm["fecha"] <= pd.to_datetime(fecha_fin))]
+# mostrar resultados
+st.markdown("<div class='section-header section-header--mensual'>Resultados de búsqueda</div>", unsafe_allow_html=True)
 
-# Mostrar tabla con estilos personalizados
 if not df_mdm.empty:
     df_mdm = df_mdm.sort_values(by="fecha", ascending=False).reset_index(drop=True)
 
-    def highlight_non_conform(val):
-        if val is False:  # Resaltar valores no conformes
-            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
-        return ''
-    
-    # Definir alias para las columnas
-    column_aliases = {
+    # renombrar columnas
+    df_mdm = df_mdm.rename(columns={
         "titulo": "MDM",
         "fecha": "Fecha",
         "operador": "Operador",
-        "vqm_bascula_conforme": "Bascula Conforme",
+        "vqm_bascula_conforme": "Báscula Conforme",
         "vqm_masico_conforme": "Másico Conforme"
-    }
+    })
 
-    # Renombrar las columnas en el DataFrame
-    df_mdm = df_mdm.rename(columns=column_aliases)
+    # convertir booleanos a texto "CONFORME"/"NO CONFORME"
+    df_mdm["Báscula Conforme"] = df_mdm["Báscula Conforme"].map({True: "CONFORME", False: "NO CONFORME"})
+    df_mdm["Másico Conforme"] = df_mdm["Másico Conforme"].map({True: "CONFORME", False: "NO CONFORME"})
 
-    # Mostrar la tabla en Streamlit con formato y alias en los encabezados
+    # aplicar colores según conformidad
+    def color_conformidad(val):
+        if val == "NO CONFORME":
+            return 'background-color: #FF4B4B; color: white; font-weight: bold;'
+        elif val == "CONFORME":
+            return 'background-color: #4CAF50; color: white; font-weight: bold;'
+        return ''
+
     st.dataframe(
-        df_mdm.style.applymap(highlight_non_conform, 
-                            subset=["Bascula Conforme", "Másico Conforme"]),
+        df_mdm.style.applymap(color_conformidad, subset=["Báscula Conforme", "Másico Conforme"]),
         use_container_width=True
     )
-
 else:
     st.warning("No se encontraron datos para los filtros seleccionados.")
-
-# Botones de exportación
-col1, col2 = st.columns([1, 1])
-
-with col1:
-    if st.button("📥 Exportar a CSV"):
-        df_mdm.to_csv("datos_vqm.csv", index=False)
-        st.success("Archivo CSV generado correctamente.")
-
-with col2:
-    if st.button("📥 Exportar a Excel"):
-        df_mdm.to_excel("datos_vqm.xlsx", index=False)
-        st.success("Archivo Excel generado correctamente.")

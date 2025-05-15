@@ -20,9 +20,16 @@ mostrar_sidebar()
 # estilos de la página
 estilos_css()
 
-# --------- Mostrar informes generados --------- #
+# encabezado visual
+st.markdown("""
+    <div class='app-header'>
+        <h1>Informes de tratamiento de NCs</h1>
+        <p>Visualización de informes generado a partir del formulario de tratamiento de NCs generado</p>
+    </div>
+    <hr class='app-divider'/>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
-st.subheader("📄 Informes de NC generados")
 
 carpeta_informes = "C:\\Users\\acuer\\OneDrive\\Escritorio\\informes"
 
@@ -58,7 +65,7 @@ if os.path.exists(carpeta_informes):
                 pdf_base64 = base64.b64encode(pdf_data).decode("utf-8")
 
             # Botón de descarga opcional
-            st.download_button("📥 Descargar PDF", data=pdf_data, file_name=informe_seleccionado, mime="application/pdf")
+            st.download_button("Descargar PDF", data=pdf_data, file_name=informe_seleccionado, mime="application/pdf")
 
             st.markdown("### Vista previa del PDF")
             st.markdown(

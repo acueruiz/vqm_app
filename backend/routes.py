@@ -169,37 +169,30 @@ def create_record(modelo):
     
     return jsonify({"error": "Modelo no encontrado"}), 404
 
-# actualizar vqm temperatura (usando "máquina")
-@api_blueprint.route('/vqm/<string:modelo>/<string:maquina>', methods=['PUT'])
-def update_record_by_maquina(modelo, maquina):
-    if modelo in MODELOS:
-        registro = MODELOS[modelo].query.filter_by(maquina=maquina).first()
-        if not registro:
-            return jsonify({"error": "Registro no encontrado"}), 404
-        
-        data = request.json
-        for key, value in data.items():
-            setattr(registro, key, value)
-        
-        db.session.commit()
-        return jsonify({"message": f"Registro {maquina} actualizado en {modelo}"}), 200
-    return jsonify({"error": "Modelo no encontrado"}), 404
+@api_blueprint.route('/vqm/<string:modelo>/<string:clave>', methods=['PUT'])
+def update_record_by_clave(modelo, clave):
+    if modelo not in MODELOS:
+        return jsonify({"error": "Modelo no encontrado"}), 404
 
-# actualizar datos mdm (usa "másico")
-@api_blueprint.route('/vqm/<string:modelo>/<string:masico>', methods=['PUT'])
-def update_record_by_masico(modelo, masico):
-    if modelo in MODELOS:
-        registro = MODELOS[modelo].query.filter_by(masico=masico).first()
-        if not registro:
-            return jsonify({"error": "Registro no encontrado"}), 404
-        
-        data = request.json
-        for key, value in data.items():
-            setattr(registro, key, value)
-        
-        db.session.commit()
-        return jsonify({"message": f"Registro {masico} actualizado en {modelo}"}), 200
-    return jsonify({"error": "Modelo no encontrado"}), 404
+    clase = MODELOS[modelo]
+
+    # elegir campo de búsqueda según el modelo
+    campo_clave = "masico" if modelo == "datos_mdms" else "maquina"
+
+    try:
+        registro = clase.query.filter(getattr(clase, campo_clave) == clave).first()
+    except Exception as e:
+        return jsonify({"error": f"Error en la búsqueda: {str(e)}"}), 500
+
+    if not registro:
+        return jsonify({"error": "Registro no encontrado"}), 404
+
+    data = request.json
+    for key, value in data.items():
+        setattr(registro, key, value)
+
+    db.session.commit()
+    return jsonify({"message": f"Registro {clave} actualizado en {modelo}"}), 200
 
 # eliminar un registro por ID
 @api_blueprint.route('/vqm/<string:modelo>/<int:id>', methods=['DELETE']) # por implementar!!!! <--------------------------------------
