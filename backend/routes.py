@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, redirect, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TipoNotificacion, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10
+from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TipoNotificacion, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10, VqmTemperaturaResumen
 from sqlalchemy.orm import joinedload
 
 bcrypt = Bcrypt()
@@ -27,7 +27,8 @@ MODELOS = {
     "tratamiento_nc_vqm": TratamientoNCVqm,
     "datos_mdms": DatosMdms,
     "vqm_mdm": VqmMdm,
-    "vqm_temperatura_mi10": VqmTemperaturaMI10
+    "vqm_temperatura_mi10": VqmTemperaturaMI10,
+    "vqm_temperatura_resumen": VqmTemperaturaResumen
 }
 
 # iniciar sesión con usuario previamente creado
@@ -267,6 +268,30 @@ def obtener_tipos_notificacion():
 def get_all_correos():
     correos = CorreoUsuario.query.options(joinedload(CorreoUsuario.tipos)).all()
     return jsonify([c.to_dict() for c in correos]), 200
+
+@api_blueprint.route('/vqm_temperatura_resumen', methods=['GET'])
+def get_vqm_temperatura_resumen():
+    try:
+        registros = VqmTemperaturaResumen.query.all()
+        return jsonify([r.to_dict() for r in registros]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@api_blueprint.route("/vqm_temperatura_resumen", methods=["POST"])
+def crear_resumen_temperatura():
+    data = request.get_json()
+
+    nuevo = VqmTemperaturaResumen(
+        maquina=data.get("maquina").strip().upper(),
+        grupo_fecha=datetime.strptime(data.get("grupo_fecha"), "%Y-%m-%d").date(),
+        estado=data.get("estado"),
+        origen="validacion",
+        fecha_evento=datetime.now().date()
+    )
+
+    db.session.add(nuevo)
+    db.session.commit()
+    return jsonify({"mensaje": "Resumen de validación creado"}), 201
 
 
 

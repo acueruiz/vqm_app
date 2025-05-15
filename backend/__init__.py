@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from .database import init_db
 from .routes import api_blueprint
 from .models import Usuario  # Importar el modelo de usuario
+from .command import actualizar_resumen_temp
 
 # Cargar variables de entorno
 load_dotenv()
@@ -31,6 +32,8 @@ def create_app():
 
     # Registrar rutas
     app.register_blueprint(api_blueprint)
+
+    app.cli.add_command(actualizar_resumen_temp)
 
     return app
 

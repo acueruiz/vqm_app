@@ -40,11 +40,6 @@ def get_vqm_mdm_no_conformes():
     return [item for item in r.json() if not item.get("vqm_masico_conforme")] if r.status_code == 200 else []
 
 @st.cache_data
-def get_vqm_temp_no_conformes():
-    r = requests.get(f"{API_URL}/vqm_temperatura_mi10")
-    return [item for item in r.json() if not item.get("vqm_conforme")] if r.status_code == 200 else []
-
-@st.cache_data
 def get_maquinas():
     r = requests.get(f"{API_URL}/vqm_temperatura")
     return list(set([i["maquina"] for i in r.json() if i.get("maquina")])) if r.status_code == 200 else []
@@ -53,6 +48,13 @@ def get_maquinas():
 def get_instrumentos():
     r = requests.get(f"{API_URL}/datos_mdms")
     return list(set([i["id_dosificador"] for i in r.json() if i.get("id_dosificador")])) if r.status_code == 200 else []
+
+@st.cache_data
+def get_vqm_temp_no_validadas():
+    r = requests.get(f"{API_URL}/vqm_temperatura_resumen")
+    if r.status_code != 200:
+        return []
+    return [i for i in r.json() if i["estado"] == "NO CONFORME" and i["origen"] == "medicion"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 st.subheader("Selección del tipo de NC")
@@ -71,10 +73,11 @@ if tipo_nc == "NC en MDM":
     instrumento = vqm_seleccionada["titulo"]
 
 if tipo_nc == "NC en Temperatura MI":
-    opciones = [f"{i['titulo']} - {i['trimestre_anio']}" for i in get_vqm_temp_no_conformes()]
+    opciones = [f"{i['maquina']} - {i['grupo_fecha']}" for i in get_vqm_temp_no_validadas()]
     seleccion = st.selectbox("Selecciona una VQM Temperatura no conforme:", opciones)
-    vqm_seleccionada = get_vqm_temp_no_conformes()[opciones.index(seleccion)]
-    maquina = vqm_seleccionada["titulo"]
+    vqm_seleccionada = get_vqm_temp_no_validadas()[opciones.index(seleccion)]
+    maquina = vqm_seleccionada["maquina"]
+    grupo_fecha = vqm_seleccionada["grupo_fecha"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 if vqm_seleccionada:
@@ -204,12 +207,28 @@ def enviar_datos():
     try:
         response = requests.post(f"{API_URL}/tratamiento_nc_vqm", json=nuevo_registro)
         if response.status_code == 201:
-            st.success("✅ No Conformidad guardada correctamente.")
-            # Generar informe PDF tras guardar la NC usando Jinja2
+            # Si es NC de temperatura validada, registrar nuevo resumen
+            if tipo_nc == "NC en Temperatura MI" and nc_validada in ["Sí", "Sí con acciones"]:
+                resumen_validado = {
+                    "maquina": maquina.strip().upper(),
+                    "grupo_fecha": grupo_fecha,  # debe estar definida en el selector
+                    "estado": "CONFORME",
+                    "origen": "validacion",
+                    "fecha_evento": str(datetime.date.today())
+                }
+
+                r_resumen = requests.post(f"{API_URL}/vqm_temperatura_resumen", json=resumen_validado)
+                if r_resumen.status_code == 201:
+                    st.success("Resumen de validación añadido correctamente.")
+                else:
+                    st.warning(f"No se pudo guardar el resumen validado: {r_resumen.text}")
+
+            st.success("Tratamiento de No Conformidad guardada correctamente.")
+            # generar informe PDF tras guardar la NC usando Jinja2
             env = Environment(loader=FileSystemLoader("templates"))
             template = env.get_template("informe_nc.html")
 
-            # Preparar el contexto: filtrar los campos vacíos para no mostrarlos en el informe
+            # preparar el contexto: filtrar los campos vacíos para no mostrarlos en el informe
             contexto_nc = {
                 "titulo": titulo,
                 "fecha": str(fecha),

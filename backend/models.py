@@ -55,7 +55,6 @@ class CorreoUsuario(BaseModel):
     tipos = relationship("TipoNotificacion", secondary=notificaciones_usuarios, back_populates="usuarios")
     usuario = relationship("Usuario")  # sin back_populates
 
-
     def to_dict(self):
         return {
             "id": self.id,
@@ -107,7 +106,7 @@ class VqmTemperatura(BaseModel):
 
     def to_dict(self):
         data = super().to_dict()
-        data["fecha_calificacion"] = self.fecha_calificacion.strftime('%Y-%m-%d') if self.fecha_calificacion else None
+        data["fecha_calificacion"] = self.fecha_calificacion.strftime('%d-%m-%Y') if self.fecha_calificacion else None
         return data
 
 # modelo de Tratamiento NC (No Conformidad) en VQM
@@ -146,8 +145,8 @@ class TratamientoNCVqm(BaseModel):
 
     def to_dict(self):
         data = super().to_dict()
-        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
-        data["fecha_acciones"] = self.fecha_acciones.strftime('%Y-%m-%d') if self.fecha_acciones else None
+        data["fecha"] = self.fecha.strftime('%d-%m-%Y') if self.fecha else None
+        data["fecha_acciones"] = self.fecha_acciones.strftime('%d-%m-%Y') if self.fecha_acciones else None
         return data
 
 # modelo de Datos MDMS
@@ -193,7 +192,7 @@ class VqmMdm(BaseModel):
 
     def to_dict(self):
         data = super().to_dict()
-        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
+        data["fecha"] = self.fecha.strftime('%d-%m-%Y') if self.fecha else None
         return data
 
 # modelo de VQM Temperatura MI10
@@ -217,5 +216,20 @@ class VqmTemperaturaMI10(BaseModel):
 
     def to_dict(self):
         data = super().to_dict()
-        data["fecha"] = self.fecha.strftime('%Y-%m-%d') if self.fecha else None
+        data["fecha"] = self.fecha.strftime('%d-%m-%Y') if self.fecha else None
+        return data
+
+class VqmTemperaturaResumen(BaseModel):
+    __tablename__ = "vqm_temperatura_resumen"
+
+    maquina = Column(String)
+    grupo_fecha = Column(Date)  # Fecha del grupo de 15 mediciones
+    estado = Column(String)  # Resultado global: "CONFORME" o "NO CONFORME"
+    origen = Column(String)  # "medicion" (15 registros) o "validacion" (tras formulario NC)
+    fecha_evento = Column(Date)  # Cuándo se registró este resumen
+
+    def to_dict(self):
+        data = super().to_dict()
+        data["grupo_fecha"] = self.grupo_fecha.strftime('%d-%m-%Y') if self.grupo_fecha else None
+        data["fecha_evento"] = self.fecha_evento.strftime('%d-%m-%Y') if self.fecha_evento else None
         return data
