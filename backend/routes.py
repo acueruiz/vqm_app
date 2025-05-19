@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from .models import db, Usuario, CorreoUsuario, PermisoUsuario, VqmTemperatura, TipoNotificacion, TratamientoNCVqm, DatosMdms, VqmMdm, VqmTemperaturaMI10, VqmTemperaturaResumen
 from sqlalchemy.orm import joinedload
+from datetime import datetime
 
 bcrypt = Bcrypt()
 
