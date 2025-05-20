@@ -38,7 +38,7 @@ def get_vqm_temperatura():
     if response.status_code == 200:
         return pd.DataFrame(response.json())
     else:
-        st.error("❌ Error al obtener datos de temperatura desde la API.")
+        st.error("Error al obtener datos de temperatura desde la API.")
         return pd.DataFrame()
 
 df_vqm_temp = get_vqm_temperatura()
@@ -67,15 +67,15 @@ if "cargas" not in st.session_state:
     st.session_state.cargas = pd.DataFrame(columns=["fecha", "temperatura_mi", "temperatura_pistola", "diferencia_temperaturas", "trimestre_anio", "operario", "num_ml_dia"])
 
 # Añadir nueva carga
-with st.expander("➕ Añadir nueva carga de temperatura"):
+with st.expander("Añadir nueva carga de temperatura"):
     fecha = st.date_input("Fecha de carga", key="fecha_carga")
     tmi = st.text_input("Temperatura MI (TMI)", key="tmi_carga")
     tr = st.text_input("Temperatura Pistola (TR)", key="tr_carga")
     num_ml_dia = st.text_input("N.º ML del día", key="num_ml_dia_carga")
 
     if st.button("Agregar carga"):
-        if len(st.session_state.cargas) >= 10:
-            st.error("⚠️ No puedes agregar más de 10 registros a la vez.")
+        if len(st.session_state.cargas) >= 15:
+            st.error("No puedes agregar más de 10 registros a la vez.")
         else:
             try:
                 tmi_float = float(tmi.strip()) if tmi.strip() else 0.0
@@ -95,7 +95,7 @@ with st.expander("➕ Añadir nueva carga de temperatura"):
 
                 st.session_state.cargas = pd.concat([st.session_state.cargas, nueva], ignore_index=True).drop_duplicates()
             except ValueError:
-                st.error("❌ Ingrese valores numéricos válidos para TMI y TR.")
+                st.error("Ingrese valores numéricos válidos para TMI y TR.")
 
 # Cálculo de estadísticas
 if not st.session_state.cargas.empty:
@@ -126,7 +126,7 @@ st.markdown("---")
 # Guardar
 def enviar_datos():
     if st.session_state.cargas.empty:
-        st.error("❌ No hay datos para guardar.")
+        st.error("No hay datos para guardar.")
         return
 
     data_to_send = (
@@ -141,11 +141,11 @@ def enviar_datos():
         try:
             response = requests.post(f"{API_URL}/vqm_temperatura_mi10", json=registro)
             if response.status_code == 201:
-                st.success(f"✅ Registro guardado: {registro['fecha']}")
+                st.success(f"Registro guardado: {registro['fecha']}")
             else:
-                st.error(f"❌ Error guardando {registro['fecha']}: {response.text}")
+                st.error(f"Error guardando {registro['fecha']}: {response.text}")
         except requests.exceptions.RequestException as e:
-            st.error(f"❌ Error en la conexión: {str(e)}")
+            st.error(f"Error en la conexión: {str(e)}")
 
     if not all(st.session_state.cargas["vqm_conforme"]):
         tipo_notificacion = "VQM Temperaturas MI NC"
@@ -162,18 +162,18 @@ def enviar_datos():
                     Sistema VQM
                     """
                     for c in correos:
-                        enviar_email(c, "⚠️ Nueva No Conformidad VQM Temperatura MI", cuerpo)
+                        enviar_email(c, "Nueva No Conformidad VQM Temperatura MI", cuerpo)
                     st.success("Correos enviados correctamente.")
                 else:
                     st.warning("No hay correos activos configurados.")
             else:
                 st.error("Error consultando destinatarios.")
         except Exception as e:
-            st.error(f"❌ Error al enviar correos: {e}")
+            st.error(f"Error al enviar correos: {e}")
 
 # Botón guardar
 if len(st.session_state.cargas) < 5:
-    st.warning("⚠️ Debes agregar al menos 5 registros antes de guardar.")
+    st.warning("Debes agregar al menos 5 registros antes de guardar.")
 
-if st.button("📥 Guardar datos en la BBDD"):
+if st.button("Guardar datos en la BBDD"):
     enviar_datos()

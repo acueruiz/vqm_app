@@ -44,10 +44,10 @@ if st.button("Iniciar sesión"):
             "permisos": data["permisos"]
         }
 
-        st.success("✅ Inicio de sesión exitoso. Redirigiendo...")
+        st.success("Inicio de sesión exitoso. Redirigiendo...")
         st.rerun()  # recarga la página
     else:
-        st.error("❌ Credenciales incorrectas. Inténtalo de nuevo.")
+        st.error("Credenciales incorrectas. Inténtalo de nuevo.")
 
 # si ya está autenticado, redirigir
 if st.session_state["authenticated"]:

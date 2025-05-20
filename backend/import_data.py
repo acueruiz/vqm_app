@@ -29,7 +29,7 @@ with app.app_context():
     # voy a borrar todas las filas de las tablas sin eliminar la estructura
     db.session.execute(text("TRUNCATE TABLE usuarios, correos_usuarios, permisos_usuarios, vqm_temperatura, vqm_mdm, tratamiento_nc_vqm, vqm_temperatura_mi10, datos_mdms RESTART IDENTITY CASCADE;"))
     db.session.commit()
-    print("✅ Todas las filas de las tablas han sido eliminadas.")
+    print("Todas las filas de las tablas han sido eliminadas.")
 
 
 def clean_and_insert(df, table_name, rename_dict, boolean_fields=None, date_fields=None, numeric_fields=None):
@@ -56,7 +56,7 @@ def clean_and_insert(df, table_name, rename_dict, boolean_fields=None, date_fiel
 
     # inserta el df en la BBDD (no sobreescribe la tabla, solo añade)
     df.to_sql(table_name, engine, if_exists='append', index=False)
-    print(f"✅ Datos insertados en {table_name} correctamente.")
+    print(f"Datos insertados en {table_name} correctamente.")
 
 # transformaciones específicas por tabla
 temp_mi_rename = {
@@ -151,4 +151,4 @@ with app.app_context():  # ejecutar la importación dentro del contexto de la ap
     clean_and_insert(pd.read_excel(files["Datos MDMS"], engine="odf"), "datos_mdms", datos_mdms_rename, 
                      numeric_fields=["kw", "valor_test1", "tolerancia1", "valor_test2", "tolerancia2"])
 
-print("✅ Importación completada sin duplicados.")
+print("Importación completada sin duplicados.")

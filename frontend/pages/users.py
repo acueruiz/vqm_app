@@ -40,7 +40,7 @@ with st.expander("Expande para añadir un nuevo usuario", expanded=True):
     nombre = st.text_input("Nombre completo")
     password = st.text_input("Contraseña", type="password")
 
-    if st.button("📝 Crear usuario"):
+    if st.button("Crear usuario"):
         if email and nombre and password:
             data_to_send = {
                 "email": email,
@@ -51,15 +51,15 @@ with st.expander("Expande para añadir un nuevo usuario", expanded=True):
             response = requests.post(f"{API_URL}/register", json=data_to_send)
 
             if response.status_code == 201:
-                st.success("✅ Usuario creado exitosamente.")
+                st.success("Usuario creado exitosamente.")
                 time.sleep(1.5)
                 st.rerun()
             elif response.status_code == 400:
                 st.error("El usuario ya existe.")
             else:
-                st.error("⚠️ Error al registrar el usuario.")
+                st.error("Error al registrar el usuario.")
         else:
-            st.warning("⚠️ Completa todos los campos.")
+            st.warning("Completa todos los campos.")
 
 # modificar usuario
 st.markdown("<h3 style='color: #0055A4;'>Modificar usuario o hacerle administrador</h3>", unsafe_allow_html=True)
@@ -79,13 +79,13 @@ with st.expander("Expande para modificar un usuario existente", expanded=False):
             response = requests.put(f"{API_URL}/vqm/usuarios/{selected_user}", json=data)
 
             if response.status_code == 200:
-                st.success("✅ Usuario modificado correctamente.")
+                st.success("Usuario modificado correctamente.")
                 time.sleep(1.5)
                 st.rerun()
             else:
-                st.error("⚠️ Error al modificar el usuario.")
+                st.error("Error al modificar el usuario.")
     else:
-        st.warning("⚠️ No hay usuarios registrados.")
+        st.warning("No hay usuarios registrados.")
 
 # borrar usuario
 st.markdown("<h3 style='color: #C70039;'>Borrar usuario</h3>", unsafe_allow_html=True)
@@ -100,15 +100,15 @@ with st.expander("Expande para elegir el usuario a borrar", expanded=False):
         # obtener el ID correspondiente
         selected_user_id = email_to_id[selected_email]
 
-        if st.button("❌ Eliminar Usuario"):
+        if st.button("Eliminar Usuario"):
             response = requests.delete(f"{API_URL}/vqm/usuarios/{selected_user_id}")
 
             if response.status_code == 200:
-                st.success("✅ Usuario eliminado correctamente.")
+                st.success("Usuario eliminado correctamente.")
                 time.sleep(1.5)
                 st.rerun()
             else:
-                st.error("⚠️ Error al eliminar el usuario.")
+                st.error("Error al eliminar el usuario.")
     else:
-        st.warning("⚠️ No hay usuarios registrados.")
+        st.warning("No hay usuarios registrados.")
 
