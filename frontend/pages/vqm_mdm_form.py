@@ -6,6 +6,7 @@ from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
 import sys
 import os
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
@@ -45,7 +46,7 @@ def get_mdm_data():
     if response.status_code == 200:
         return pd.DataFrame(response.json())
     else:
-        st.error("❌ Error al obtener detalles de MDMs.")
+        st.error("Error al obtener detalles de MDMs.")
         return pd.DataFrame()
 
 df_mdm = get_mdm_data()
@@ -76,21 +77,19 @@ with col2:
 with col3:
     fecha = st.date_input("Fecha")
 
+st.markdown("---")
+
+st.subheader("Verificación de la báscula")
+
 # obtener tolerancias desde la tabla mdm_details
-tolerancia_cero = mdm_details.get("tolerancia_cero", 0.1)  # Valor por defecto 0.1 si no está definido
-tolerancia_vr = mdm_details.get("tolerancia_vr", 0.2)  # Valor por defecto 0.2 si no está definido
+tolerancia_cero = mdm_details.get("tolerancia_cero", 0.1)  # valor por defecto 0.1 si no está definido
+tolerancia_vr = mdm_details.get("tolerancia_vr", 0.2)  # valor por defecto 0.2 si no está definido
 
 # asegurar que peso_patron es float
 peso_patron = convertir_a_float(mdm_details.get("vr_masas_patron", 0.0))
 
 # cálculo de conformidad de la báscula usando tolerancias
 def verificar_conformidad_bascula(valor_bascula, valor_cero, tolerancia_cero, tolerancia_vr, peso_patron):
-    """
-    Verifica si la báscula está conforme.
-    - valor_cero_bascula debe estar dentro de ±tolerancia_cero.
-    - valor_vqm_bascula debe estar dentro de ±tolerancia_vr.
-    """
-
     # convertir valores a float si aún no lo están
     valor_bascula = convertir_a_float(valor_bascula)
     valor_cero = convertir_a_float(valor_cero)
@@ -105,12 +104,12 @@ def verificar_conformidad_bascula(valor_bascula, valor_cero, tolerancia_cero, to
     return "CONFORME"
 
 def mostrar_conformidad(mensaje):
-    color = "#BDBDBD"  # Gris por defecto (Datos incompletos)
+    color = "#BDBDBD"  # gris por defecto (Datos incompletos)
 
     if mensaje == "CONFORME":
-        color = "#4CAF50"  # Verde
+        color = "#4CAF50"  # verde
     elif mensaje == "NO CONFORME":
-        color = "#FF4B4B"  # Rojo
+        color = "#FF4B4B"  # rojo
 
     st.markdown(f"""
         <div style="
@@ -127,11 +126,7 @@ def mostrar_conformidad(mensaje):
         </div>
     """, unsafe_allow_html=True)
 
-st.markdown("---")
-
-st.subheader("Verificación de la báscula")
-
-col1, col2, col3, col4 = st.columns(4, gap="medium")
+col1, col2, col3 = st.columns(3, gap="medium")
 
 with col1:
     peso_patron = st.text_input("Peso masas patrón (kg)", str(mdm_details.get("vr_masas_patron", 0.0)), disabled=True)
@@ -152,54 +147,115 @@ with col3:
     st.text("VQM Báscula Conforme:")
     mostrar_conformidad(vqm_bascula_conforme)
 
-with col4:
-    verif1_valor_masico = st.text_input("Cantidad 1 - Valor másico (kg)")
-    verif1_valor_bascula = st.text_input("Cantidad 1 - Valor báscula (kg)")
-    verif2_valor_masico = st.text_input("Cantidad 2 - Valor másico (kg)")
-    verif2_valor_bascula = st.text_input("Cantidad 2 - Valor báscula (kg)")
-
 # convertir todos los valores
 peso_patron = convertir_a_float(mdm_details.get("vr_masas_patron", 0.0))
 valor_vqm_bascula = convertir_a_float(valor_vqm_bascula)
 valor_cero_bascula = convertir_a_float(valor_cero_bascula)
-verif1_valor_masico = convertir_a_float(verif1_valor_masico)
-verif1_valor_bascula = convertir_a_float(verif1_valor_bascula)
-verif2_valor_masico = convertir_a_float(verif2_valor_masico)
-verif2_valor_bascula = convertir_a_float(verif2_valor_bascula)
-
-# cálculo errores
-def calcular_error(valor_bascula, valor_maxico):
-    """Calcula el error en gramos, redondeando a 0 decimales y manejando valores vacíos."""
-    if valor_bascula is None or valor_maxico is None:
-        return None
-    return round((valor_bascula - valor_maxico) * 1000, 0)
-
-error_cantidad_1 = calcular_error(verif1_valor_bascula, verif1_valor_masico)
-error_cantidad_2 = calcular_error(verif2_valor_bascula, verif2_valor_masico)
-
-# verificación de conformidad
-tolerancia1 = mdm_details.get("tolerancia1", 10)
-tolerancia2 = mdm_details.get("tolerancia2", 10)
-
-def verificar_conformidad(error1, error2, tolerancia1, tolerancia2, segunda_cantidad):
-    if error1 is None or error2 is None:
-        return "Datos incompletos"
-    if abs(error1) > tolerancia1 or abs(error2) > tolerancia2:
-        return "NO CONFORME"
-    if segunda_cantidad in [None, 0]:
-        return "Introducir datos cantidad 2"
-    return "CONFORME"
-
-vqm_masico_conforme = verificar_conformidad(error_cantidad_1, error_cantidad_2, tolerancia1, tolerancia2, convertir_a_float(segunda_cantidad))
 
 st.markdown("---")
 
 st.subheader("Verificación del MDM")
 
+# --- Tolerancias ---
+tolerancia1 = mdm_details.get("tolerancia1", 30)
+tolerancia2 = mdm_details.get("tolerancia2", 110)
+
+st.markdown("#### Parámetros de referencia")
+col_tol1, col_tol2 = st.columns(2)
+with col_tol1:
+    st.text_input("Tolerancia 1ª cantidad (g)", value=tolerancia1, disabled=True)
+with col_tol2:
+    st.text_input("Tolerancia 2ª cantidad (g)", value=tolerancia2, disabled=True)
+
+st.markdown("#### Introducción de valores medidos")
+col1, col2 = st.columns(2)
+
+# ---------- INPUTS CANTIDAD 1 ----------
+with col1:
+    c1_masico_v1 = st.text_input("Cantidad 1 - Másico 1ª verificación (kg)")
+    c1_bascula_v1 = st.text_input("Cantidad 1 - Báscula 1ª verificación (kg)")
+
+with col2:
+    c2_masico_v1 = st.text_input("Cantidad 2 - Másico 1ª verificación (kg)")
+    c2_bascula_v1 = st.text_input("Cantidad 2 - Báscula 1ª verificación (kg)")
+
+# Convertimos las 1ª verificaciones
+c1_m1 = convertir_a_float(c1_masico_v1)
+c1_b1 = convertir_a_float(c1_bascula_v1)
+c2_m1 = convertir_a_float(c2_masico_v1)
+c2_b1 = convertir_a_float(c2_bascula_v1)
+
+# Función de error
+def calcular_error(b1, m1, b2=None, m2=None):
+    if b1 is None or m1 is None:
+        return None
+    if b2 is not None and m2 is not None:
+        return round((b2 - m2) * 1000, 0)
+    return round((b1 - m1) * 1000, 0)
+
+# Detectar necesidad de 2ª verif
+def necesita_segunda(error, tol):
+    return error is not None and abs(error) > tol
+
+error_c1 = calcular_error(c1_b1, c1_m1)
+error_c2 = calcular_error(c2_b1, c2_m1)
+
+activar_c1_v2 = necesita_segunda(error_c1, tolerancia1)
+activar_c2_v2 = necesita_segunda(error_c2, tolerancia2)
+
+# ---------- INPUTS 2ª VERIFICACIÓN (si necesarias) ----------
+col3, col4 = st.columns(2)
+
+with col3:
+    c1_masico_v2 = st.text_input("Cantidad 1 - Másico 2ª verificación (kg)", disabled=not activar_c1_v2)
+    c1_bascula_v2 = st.text_input("Cantidad 1 - Báscula 2ª verificación (kg)", disabled=not activar_c1_v2)
+
+with col4:
+    c2_masico_v2 = st.text_input("Cantidad 2 - Másico 2ª verificación (kg)", disabled=not activar_c2_v2)
+    c2_bascula_v2 = st.text_input("Cantidad 2 - Báscula 2ª verificación (kg)", disabled=not activar_c2_v2)
+
+# Convertir segunda verif (solo si necesarias)
+c1_m2 = convertir_a_float(c1_masico_v2) if activar_c1_v2 else None
+c1_b2 = convertir_a_float(c1_bascula_v2) if activar_c1_v2 else None
+c2_m2 = convertir_a_float(c2_masico_v2) if activar_c2_v2 else None
+c2_b2 = convertir_a_float(c2_bascula_v2) if activar_c2_v2 else None
+
+# Recalcular errores (usando 2ª si procede)
+error_c1 = calcular_error(c1_b1, c1_m1, c1_b2, c1_m2)
+error_c2 = calcular_error(c2_b1, c2_m1, c2_b2, c2_m2)
+
+# Evaluar conformidad
+def evaluar(error1, m2, b2, tol):
+    if error1 is None:
+        return "Datos incompletos"
+    if abs(error1) > tol:
+        if m2 is None or b2 is None:
+            return "Datos segunda verificación"
+        elif abs((b2 - m2) * 1000) > tol:
+            return "NO CONFORME"
+        else:
+            return "CONFORME"
+    return "CONFORME"
+
+c1_conforme = evaluar(error_c1, c1_m2, c1_b2, tolerancia1)
+c2_conforme = evaluar(error_c2, c2_m2, c2_b2, tolerancia2)
+
+# Resultado global
+if "NO CONFORME" in (c1_conforme, c2_conforme):
+    vqm_masico_conforme = "NO CONFORME"
+elif "Datos incompletos" in (c1_conforme, c2_conforme):
+    vqm_masico_conforme = "Datos incompletos"
+elif "Datos segunda verificación" in (c1_conforme, c2_conforme):
+    vqm_masico_conforme = "Datos segunda verificación"
+else:
+    vqm_masico_conforme = "CONFORME"
+
+# ---------- Mostrar resultados ----------
+st.markdown("#### Cálculo de errores automático")
 col1, col2 = st.columns(2)
 with col1:
-    st.number_input("Error cantidad 1 (g)", value=error_cantidad_1 or 0, disabled=True)
-    st.number_input("Error cantidad 2 (g)", value=error_cantidad_2 or 0, disabled=True)
+    st.number_input("Error cantidad 1 (g)", value=error_c1 or 0, disabled=True)
+    st.number_input("Error cantidad 2 (g)", value=error_c2 or 0, disabled=True)
 
 with col2:
     st.text("VQM Másico Conforme:")
@@ -215,18 +271,18 @@ def enviar_datos():
         "operador": operador,
         "valor_bascula": valor_vqm_bascula,
         "valor_cero_bascula": valor_cero_bascula,
-        "error_cantidad1": error_cantidad_1,
-        "error_cantidad2": error_cantidad_2,
+        "error_cantidad1": error_c1,
+        "error_cantidad2": error_c2,
         "vqm_masico_conforme": vqm_masico_conforme == "CONFORME",
         "vqm_bascula_conforme": vqm_bascula_conforme == "CONFORME",
-        "cant1_verif1_valor_masico": verif1_valor_masico if verif1_valor_masico is not None else None,
-        "cant1_verif1_valor_bascula": verif1_valor_bascula if verif1_valor_bascula is not None else None,
-        "cant1_verif2_valor_masico": verif2_valor_masico if verif2_valor_masico is not None else None,
-        "cant1_verif2_valor_bascula": verif2_valor_bascula if verif2_valor_bascula is not None else None,
-        "cant2_verif1_valor_masico": segunda_cantidad if segunda_cantidad is not None else None,
-        "cant2_verif1_valor_bascula": verif1_valor_bascula if verif1_valor_bascula is not None else None,
-        "cant2_verif2_valor_masico": segunda_cantidad if segunda_cantidad is not None else None,
-        "cant2_verif2_valor_bascula": verif2_valor_bascula if verif2_valor_bascula is not None else None
+        "cant1_verif1_valor_masico": c1_m1,
+        "cant1_verif1_valor_bascula": c1_b1,
+        "cant1_verif2_valor_masico": c1_m2,
+        "cant1_verif2_valor_bascula": c1_b2,
+        "cant2_verif1_valor_masico": c2_m1,
+        "cant2_verif1_valor_bascula": c2_b1,
+        "cant2_verif2_valor_masico": c2_m2,
+        "cant2_verif2_valor_bascula": c2_b2
     }
 
     nuevo_registro = {k: v for k, v in nuevo_registro.items() if v is not None}
@@ -244,10 +300,8 @@ if st.button("Guardar datos en la BBDD"):
     enviar_datos()
 
     if vqm_masico_conforme == "NO CONFORME" or vqm_bascula_conforme == "NO CONFORME":
-        # tipo común para todos los casos MDM
         tipo_notificacion = "VQM MDM NC"
 
-        # Obtener correos con ese tipo de notificación
         try:
             response = requests.get(f"{API_URL}/correos_usuarios")
             if response.status_code == 200:
@@ -266,28 +320,55 @@ if st.button("Guardar datos en la BBDD"):
 
                                 Se ha registrado una nueva NO CONFORMIDAD en un formulario VQM MDM.
 
-                                Tipo de NC:
+                                Tipo de NC detectada:
                                 {"- NC MÁSICO" if vqm_masico_conforme == "NO CONFORME" else ""}
                                 {"- NC BÁSCULA" if vqm_bascula_conforme == "NO CONFORME" else ""}
 
-                                Detalles:
+                                Detalles generales:
                                 - Fecha: {fecha}
                                 - Operador: {operador}
-                                - Valor báscula: {valor_vqm_bascula} kg
-                                - Valor másico: {verif1_valor_masico} kg
+                                - MDM: {mdm_selected}
 
-                                Puedes revisar más detalles en la aplicación VQM.
+                                Verificación BÁSCULA:
+                                - Valor patrón: {peso_patron} kg
+                                - Valor leído báscula: {valor_vqm_bascula} kg
+                                - Valor cero: {valor_cero_bascula} kg
+                                - Tolerancia VR: {tolerancia_vr} kg
+                                - Tolerancia Cero: {tolerancia_cero} kg
+                                - Resultado: {"NO CONFORME" if vqm_bascula_conforme == "NO CONFORME" else "CONFORME"}
+
+                                Verificación MÁSICO:
+
+                                Cantidad 1:
+                                - 1ª Verif: {c1_m1} kg (másico) vs {c1_b1} kg (báscula)
+                                - 2ª Verif: {c1_m2 or '-'} kg (másico) vs {c1_b2 or '-'} kg (báscula)
+                                - Error resultante: {error_c1 or '-'} g
+
+                                Cantidad 2:
+                                - 1ª Verif: {c2_m1} kg (másico) vs {c2_b1} kg (báscula)
+                                - 2ª Verif: {c2_m2 or '-'} kg (másico) vs {c2_b2 or '-'} kg (báscula)
+                                - Error resultante: {error_c2 or '-'} g
+
+                                - Tolerancia cantidad 1: {tolerancia1} g
+                                - Tolerancia cantidad 2: {tolerancia2} g
+                                - Resultado: {"NO CONFORME" if vqm_masico_conforme == "NO CONFORME" else "CONFORME"}
+
+                                Puedes revisar más detalles desde la aplicación VQM.
 
                                 Saludos,
                                 Sistema VQM
                                 """
+
                     for correo in correos_destino:
                         enviar_email(correo, "⚠️ Nueva No Conformidad VQM MDM", cuerpo)
 
-                    st.success("Formulario enviado y correos automáticos enviados.")
+                    st.success("Enviados correos automáticos.")
+                    time.sleep(2)
+                    st.rerun()
                 else:
                     st.warning("No hay correos activos asignados al tipo VQM_MDM.")
             else:
                 st.error("Error al consultar destinatarios de correo.")
         except Exception as e:
             st.error(f"Error al enviar correos automáticos: {e}")
+

@@ -6,7 +6,7 @@ from sidebar import mostrar_sidebar
 from verificar_autenticacion import verificar_autenticacion
 from styles import estilos_css
 
-# configuración y sidebar
+# configuración, sidebar y autenticación
 st.set_page_config(page_title="Panel de Control VQM", page_icon="🏭", layout="wide")
 estilos_css()
 verificar_autenticacion()
@@ -49,11 +49,12 @@ def cargar_datos():
 with st.spinner("Cargando datos..."):
     df_vqm, df_temp, df_nc = cargar_datos()
 
+# por si no hay datos
 if df_vqm.empty and df_temp.empty:
     st.error("No hay datos disponibles. Comprueba la API.")
     st.stop()
 
-# selector de año
+# filtro por año para toda la página
 years = sorted(set(df_vqm["anio"].dropna().unique()) | set(df_temp["anio"].dropna().unique()))
 year_sel = st.selectbox("Selecciona año:", years, index=len(years)-1)
 
@@ -61,6 +62,10 @@ year_sel = st.selectbox("Selecciona año:", years, index=len(years)-1)
 df_vqm = df_vqm[df_vqm["anio"] == year_sel]
 df_temp = df_temp[df_temp["anio"] == year_sel]
 df_nc = df_nc[df_nc["anio"] == year_sel]
+
+st.write("Año seleccionado:", year_sel)
+fechas_formateadas = df_vqm["fecha"].dt.strftime("%d/%m/%Y").sort_values().unique()
+st.write("Fechas en el df_vqm filtrado (DD/MM/YYYY):", fechas_formateadas)
 
 # VQM por tipo
 total_dosi = df_vqm["vqm_masico_conforme"].notna().sum()
@@ -108,28 +113,55 @@ with tab_res:
     g1, g2 = st.columns(2, gap="large")
 
     with g1:
+        st.subheader("Evolución mensual VQM MDM")
+
+        # gráfico de barras
+        df_mes = df_vqm.groupby(["mes_num", "vqm_masico_conforme"]).size().reset_index(name="count")
+        fig_mes_mdm = px.bar(
+            df_mes, x="mes_num", y="count", color="vqm_masico_conforme",
+            labels={"mes_num": "Mes", "count": "Cantidad", "vqm_bascula_conforme": "Conforme"},
+            barmode="stack"
+        )
+        g1.plotly_chart(fig_mes_mdm, use_container_width=True)
+
+    with g2:
         st.subheader("Evolución mensual VQM Báscula")
 
         # gráfico de barras
-        df_mes = df_vqm.groupby(["mes_num", "vqm_bascula_conforme"])\
-                    .size().reset_index(name="count")
-        fig_mes = px.bar(
+        df_mes = df_vqm.groupby(["mes_num", "vqm_bascula_conforme"]).size().reset_index(name="count")
+        fig_mes_bascula = px.bar(
             df_mes, x="mes_num", y="count", color="vqm_bascula_conforme",
             labels={"mes_num": "Mes", "count": "Cantidad", "vqm_bascula_conforme": "Conforme"},
             barmode="stack"
         )
-        g1.plotly_chart(fig_mes, use_container_width=True)
+        g2.plotly_chart(fig_mes_bascula, use_container_width=True)
 
-    # título + gráfico de pastel (todo dentro de g2)
-    with g2:
-        st.subheader("Reparto conformidad anual")
-        total_conf = (df_vqm["vqm_bascula_conforme"] == True).sum() + (df_temp["vqm_conforme"] == True).sum()
-        total_nc2 = (df_vqm["vqm_bascula_conforme"] == False).sum() + (df_temp["vqm_conforme"] == False).sum()
-        fig_pie = px.pie(
-            names=["Conforme", "No Conforme"],
-            values=[total_conf, total_nc2]
+    c1, c2 = st.columns(2, gap="large")
+
+    c1, c2 = st.columns(2, gap="large")
+
+    with c1:
+        st.subheader("Evolución mensual VQM Temperaturas")
+
+        df_mes = df_temp.groupby(["mes_num", "vqm_conforme"]).size().reset_index(name="count")
+        fig_mes = px.bar(
+            df_mes, x="mes_num", y="count", color="vqm_conforme",
+            labels={"mes_num": "Mes", "count": "Cantidad", "vqm_conforme": "Conforme"},
+            barmode="stack"
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
+        c1.plotly_chart(fig_mes, use_container_width=True, key="grafico_temp_mensual")
+
+    with c2:
+        st.subheader("Reparto conformidad anual")
+
+        df_reparto = df_temp["vqm_conforme"].value_counts().reset_index()
+        df_reparto.columns = ["Conforme", "Cantidad"]
+
+        fig_reparto = px.pie(
+            df_reparto, names="Conforme", values="Cantidad",
+            hole=0.4
+        )
+        c2.plotly_chart(fig_reparto, use_container_width=True, key="grafico_temp_tarta")
 
 with tab_men:
     st.markdown(
