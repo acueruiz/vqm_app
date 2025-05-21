@@ -38,7 +38,7 @@ def cargar_datos():
 
     for df in (df_vqm, df_temp, df_nc):
         if "fecha" in df.columns:
-            df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+            df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce", dayfirst=True)
             df["anio"] = df["fecha"].dt.year
             df["mes_num"] = df["fecha"].dt.month
             df["mes"] = df["mes_num"].map(meses_es)

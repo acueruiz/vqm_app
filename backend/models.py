@@ -201,7 +201,7 @@ class VqmTemperaturaMI10(BaseModel):
 
     titulo = Column(String)
     fecha = Column(Date)
-    num_ml_dia = Column(Integer)
+    num_ml_dia = Column(String)
     temperatura_mi = Column(Float)
     temperatura_pistola = Column(Float)
     diferencia_temperaturas = Column(Float)

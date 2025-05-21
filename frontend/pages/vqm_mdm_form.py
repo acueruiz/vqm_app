@@ -89,18 +89,21 @@ tolerancia_vr = mdm_details.get("tolerancia_vr", 0.2)  # valor por defecto 0.2 s
 peso_patron = convertir_a_float(mdm_details.get("vr_masas_patron", 0.0))
 
 # cálculo de conformidad de la báscula usando tolerancias
-def verificar_conformidad_bascula(valor_bascula, valor_cero, tolerancia_cero, tolerancia_vr, peso_patron):
-    # convertir valores a float si aún no lo están
+def verificar_conformidad_bascula(valor_bascula, valor_cero, tolerancia_cero_g, tolerancia_vr_g, peso_patron_kg):
     valor_bascula = convertir_a_float(valor_bascula)
     valor_cero = convertir_a_float(valor_cero)
-    peso_patron = convertir_a_float(peso_patron)
+    peso_patron = convertir_a_float(peso_patron_kg)
 
     if valor_bascula is None or valor_cero is None or peso_patron is None:
         return "Datos incompletos"
-    
-    if abs(valor_cero) > tolerancia_cero or abs(valor_bascula - peso_patron) > tolerancia_vr:
+
+    # convertimos valores en kg a gramos
+    valor_cero_g = valor_cero * 1000
+    diferencia_vr_g = abs(valor_bascula - peso_patron) * 1000
+
+    if abs(valor_cero_g) > tolerancia_cero_g or diferencia_vr_g > tolerancia_vr_g:
         return "NO CONFORME"
-    
+
     return "CONFORME"
 
 def mostrar_conformidad(mensaje):
@@ -130,12 +133,10 @@ col1, col2, col3 = st.columns(3, gap="medium")
 
 with col1:
     peso_patron = st.text_input("Peso masas patrón (kg)", str(mdm_details.get("vr_masas_patron", 0.0)), disabled=True)
-    primera_cantidad = st.text_input("Primera cantidad (kg)", str(mdm_details.get("valor_test1", 0.0)), disabled=True)
-    segunda_cantidad = st.text_input("Segunda cantidad (kg)", str(mdm_details.get("valor_test2", 0.0)), disabled=True)
 
 with col2:
-    st.text_input("Tolerancia VR (kg)", value=tolerancia_vr, disabled=True)
-    st.text_input("Tolerancia Cero (kg)", value=tolerancia_cero, disabled=True)
+    st.text_input("Tolerancia VR (g)", value=tolerancia_vr, disabled=True)
+    st.text_input("Tolerancia Cero (g)", value=tolerancia_cero, disabled=True)
 
 with col3:
     valor_vqm_bascula = st.text_input("Valor VQM báscula (kg)")

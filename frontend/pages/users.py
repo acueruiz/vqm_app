@@ -65,13 +65,13 @@ with st.expander("Expande para añadir un nuevo usuario", expanded=True):
 st.markdown("<h3 style='color: #0055A4;'>Modificar usuario o hacerle administrador</h3>", unsafe_allow_html=True)
 with st.expander("Expande para modificar un usuario existente", expanded=False):
     if usuarios:
-        selected_user = st.selectbox("🔄 Selecciona un usuario para modificar", [u["email"] for u in usuarios])
+        selected_user = st.selectbox("Selecciona un usuario para modificar", [u["email"] for u in usuarios])
 
         nuevo_nombre = st.text_input("Nuevo nombre completo", value="")
         nueva_password = st.text_input("Nueva contraseña (opcional)", type="password")
         nuevo_admin = st.checkbox("Convertir en Administrador", value=False)
 
-        if st.button("💾 Guardar cambios"):
+        if st.button("Guardar cambios"):
             data = {"nombre": nuevo_nombre, "admin": nuevo_admin}
             if nueva_password:
                 data["password"] = nueva_password  # solo cambia la contraseña si se mete una nueva, es opcional

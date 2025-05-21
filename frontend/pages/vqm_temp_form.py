@@ -8,6 +8,7 @@ from styles import estilos_css
 import sys
 import os
 import time
+import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from utils.email_sender import enviar_email
@@ -18,7 +19,6 @@ API_URL = "http://127.0.0.1:5000/vqm"
 st.set_page_config(page_title="VQM Temperatura - Introducción de Datos", layout="wide", page_icon="📝")
 
 # Estilos y cabecera
-estilos_css()
 st.markdown("""
     <div class='app-header'>
       <h1>VQM Temperatura – Introducción de Datos</h1>
@@ -29,6 +29,7 @@ st.markdown("""
 
 # Verificación de autenticación y sidebar
 verificar_autenticacion()
+estilos_css()
 mostrar_sidebar()
 
 # Cargar datos
@@ -48,7 +49,7 @@ st.subheader("Datos generales")
 col1, col2 = st.columns(2)
 
 with col1:
-    trimestre = st.selectbox("Trimestre", ["Primer Trimestre 2025", "Segundo Trimestre 2025", "Tercer Trimestre 2025", "Cuarto Trimestre 2025"], key="trimestre_main")
+    trimestre = st.selectbox("Trimestre", ["Primer Trimestre", "Segundo Trimestre", "Tercer Trimestre", "Cuarto Trimestre"], key="trimestre_main")
     maquina = st.selectbox("Máquina", df_vqm_temp["maquina"].unique(), key="maquina_main")
     operador = st.text_input("Operador", value=st.session_state["usuario"]["nombre"], disabled=True)
 
@@ -75,22 +76,23 @@ with st.expander("Añadir nueva carga de temperatura"):
 
     if st.button("Agregar carga"):
         if len(st.session_state.cargas) >= 15:
-            st.error("No puedes agregar más de 10 registros a la vez.")
+            st.error("No puedes agregar más de 15 registros.")
         else:
             try:
                 tmi_float = float(tmi.strip()) if tmi.strip() else 0.0
                 tr_float = float(tr.strip()) if tr.strip() else 0.0
-                num_ml_float = float(num_ml_dia.strip()) if num_ml_dia.strip() else 0.0
+                num_ml = num_ml_dia.strip()
                 diferencia = tmi_float - tr_float
 
                 nueva = pd.DataFrame({
+                    "titulo": [maquina],
                     "fecha": [fecha.strftime('%d-%m-%Y')],
                     "temperatura_mi": [tmi_float],
                     "temperatura_pistola": [tr_float],
                     "diferencia_temperaturas": [diferencia],
                     "trimestre_anio": [trimestre],
                     "operario": [operador],
-                    "num_ml_dia": [num_ml_float]
+                    "num_ml_dia": [num_ml]
                 })
 
                 st.session_state.cargas = pd.concat([st.session_state.cargas, nueva], ignore_index=True).drop_duplicates()
@@ -111,24 +113,41 @@ if not st.session_state.cargas.empty:
     std_diff = 0.0 if np.isnan(std_diff) else std_diff
     mean_diff = 0.0 if np.isnan(mean_diff) else mean_diff
 
+    # usa mean_diff como base para lsx/lix
     lsx = mean_diff + std_diff
     lix = mean_diff - std_diff
 
     st.session_state.cargas["vqm_conforme"] = st.session_state.cargas["diferencia_temperaturas"].apply(lambda x: lix <= x <= lsx)
-    st.session_state.cargas[["desviacion_tmi", "desviacion_tmi_tr", "media_tmi_tr", "lsx", "lix"]] = [std_tmi, std_diff, mean_diff, lsx, lix]
+    st.session_state.cargas["desviacion_tmi"] = std_tmi
+    st.session_state.cargas["desviacion_tmi_tr"] = std_diff
+    st.session_state.cargas["media_tmi_tr"] = mean_diff
+    st.session_state.cargas["lsx"] = lsx
+    st.session_state.cargas["lix"] = lix
+
+    st.session_state.cargas["titulo"] = maquina
 
 # Mostrar tabla
 st.subheader("Cargas registradas")
 st.dataframe(st.session_state.cargas)
 
+# Botón para limpiar manualmente
+if st.button("Limpiar cargas actuales"):
+    st.session_state.cargas = pd.DataFrame(columns=[
+        "fecha", "temperatura_mi", "temperatura_pistola",
+        "diferencia_temperaturas", "trimestre_anio",
+        "operario", "num_ml_dia"
+    ])
+    st.success("Cargas eliminadas.")
+    st.rerun()
+
 st.markdown("---")
 
-# Guardar
 def enviar_datos():
     if st.session_state.cargas.empty:
         st.error("No hay datos para guardar.")
         return
 
+    # Convertir a formato JSON serializable
     data_to_send = (
         st.session_state.cargas
         .fillna(0.0)
@@ -137,6 +156,7 @@ def enviar_datos():
         .to_dict(orient="records")
     )
 
+    # Enviar cada carga individual a la API
     for registro in data_to_send:
         try:
             response = requests.post(f"{API_URL}/vqm_temperatura_mi10", json=registro)
@@ -147,6 +167,45 @@ def enviar_datos():
         except requests.exceptions.RequestException as e:
             st.error(f"Error en la conexión: {str(e)}")
 
+    # Crear resumen automático si hay 15 registros
+    if len(st.session_state.cargas) == 15:
+        # otener valores para el cálculo
+        mean_diff = st.session_state.cargas["diferencia_temperaturas"].mean()
+        std_diff = st.session_state.cargas["diferencia_temperaturas"].std(ddof=0)
+        media_calificacion = filtro_maquina["media_calificacion"]
+
+        # calcular los límites
+        lsx = media_calificacion + std_diff
+        lix = media_calificacion - std_diff
+
+        # evaluar conformidad global
+        estado_global = (
+            "CONFORME"
+            if lix <= mean_diff <= lsx
+            else "NO CONFORME"
+        )
+
+        # guardar resumen
+        grupo_fecha = pd.to_datetime(st.session_state.cargas["fecha"].iloc[0], dayfirst=True).strftime('%Y-%m-%d')
+
+        resumen_data = {
+            "maquina": maquina.strip().upper(),
+            "grupo_fecha": grupo_fecha,
+            "estado": estado_global,
+            "origen": "medicion",
+            "fecha_evento": datetime.date.today().strftime("%Y-%m-%d")
+        }
+
+        try:
+            r = requests.post(f"{API_URL}/vqm_temperatura_resumen", json=resumen_data)
+            if r.status_code == 201:
+                st.success("Resumen de grupo de 15 cargas creado correctamente.")
+            else:
+                st.warning(f"No se pudo guardar el resumen: {r.text}")
+        except Exception as e:
+            st.error(f"Error al crear resumen: {e}")
+
+    # enviar correos si alguna carga es NO CONFORME
     if not all(st.session_state.cargas["vqm_conforme"]):
         tipo_notificacion = "VQM Temperaturas MI NC"
         try:
