@@ -65,7 +65,6 @@ df_nc = df_nc[df_nc["anio"] == year_sel]
 
 st.write("Año seleccionado:", year_sel)
 fechas_formateadas = df_vqm["fecha"].dt.strftime("%d/%m/%Y").sort_values().unique()
-st.write("Fechas en el df_vqm filtrado (DD/MM/YYYY):", fechas_formateadas)
 
 # VQM por tipo
 total_dosi = df_vqm["vqm_masico_conforme"].notna().sum()
