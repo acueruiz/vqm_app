@@ -73,7 +73,6 @@ total_temp = df_temp["vqm_conforme"].notna().sum()
 
 # No conformidades por tipo
 nc_dosi = (df_vqm["vqm_masico_conforme"] == False).sum()
-nc_basc = (df_vqm["vqm_bascula_conforme"] == False).sum()
 nc_temp = (df_temp["vqm_conforme"] == False).sum()
 
 # Gestión NC
